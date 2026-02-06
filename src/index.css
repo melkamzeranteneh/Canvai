@@ -1,0 +1,76 @@
+:root {
+  --bg-color: #1a1a1a;
+  /* Obsidian black */
+  --surface-color: #262626;
+  /* Obsidian gray */
+  --surface-hover: #333333;
+  --border-color: #404040;
+  --text-primary: #ffffff;
+  --text-secondary: #999999;
+  --accent-color: #7b61ff;
+  /* Obsidian-like purple-blue accent */
+  /* Sky 400 - Blueprint blue */
+  --accent-hover: #0ea5e9;
+  /* Sky 500 */
+  --selection-color: rgba(56, 189, 248, 0.2);
+  --delete-color: #ef4444;
+
+  --glass-bg: rgba(15, 23, 42, 0.8);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --blueprint-grid: rgba(56, 189, 248, 0.1);
+  --blueprint-major: rgba(56, 189, 248, 0.2);
+
+  --grad-primary: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  --grad-accent: linear-gradient(135deg, #38bdf8 0%, #0ea5e9 100%);
+
+  --font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--bg-color);
+  color: var(--text-primary);
+  font-family: var(--font-family);
+  overflow: hidden;
+  height: 100vh;
+  width: 100vw;
+}
+
+#root {
+  height: 100%;
+  width: 100%;
+}
+
+button {
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-color);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--surface-hover);
+}

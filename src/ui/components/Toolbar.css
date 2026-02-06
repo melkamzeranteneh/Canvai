@@ -1,0 +1,87 @@
+.toolbar {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    height: 48px;
+    background: linear-gradient(180deg, rgba(38, 38, 38, 0.95) 0%, rgba(30, 30, 30, 0.95) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 24px;
+    display: flex;
+    align-items: center;
+    padding: 0 8px;
+    gap: 4px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), 0 2px 8px rgba(0, 0, 0, 0.4);
+    z-index: 100;
+    backdrop-filter: blur(12px);
+    transition: box-shadow 0.3s ease;
+}
+
+.toolbar:hover {
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.7), 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+.toolbar-section {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.toolbar-btn {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 18px;
+    color: var(--text-secondary);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid transparent;
+}
+
+.toolbar-btn:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+    color: var(--text-primary);
+    border-color: rgba(255, 255, 255, 0.1);
+    transform: scale(1.05);
+}
+
+.toolbar-btn:active {
+    transform: scale(0.95);
+}
+
+.toolbar-btn.active {
+    background: linear-gradient(135deg, var(--accent-color) 0%, #6b4fd6 100%);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(123, 97, 255, 0.4);
+}
+
+.toolbar-divider {
+    width: 1px;
+    height: 24px;
+    background: linear-gradient(180deg, transparent 0%, var(--border-color) 50%, transparent 100%);
+    margin: 0 4px;
+}
+
+.ai-btn {
+    width: auto;
+    padding: 0 14px;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    background: linear-gradient(135deg, rgba(123, 97, 255, 0.15) 0%, rgba(123, 97, 255, 0.08) 100%);
+    border: 1px solid rgba(123, 97, 255, 0.3);
+    color: var(--accent-color);
+}
+
+.ai-btn span {
+    display: inline;
+}
+
+.ai-btn:hover {
+    background: linear-gradient(135deg, rgba(123, 97, 255, 0.25) 0%, rgba(123, 97, 255, 0.15) 100%);
+    border-color: rgba(123, 97, 255, 0.5);
+    color: #fff;
+    box-shadow: 0 4px 16px rgba(123, 97, 255, 0.3);
+    transform: scale(1.05);
+}

@@ -1,0 +1,32 @@
+.app-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    width: 100vw;
+    background-color: var(--bg-color);
+}
+
+.main-content {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+}
+
+.status-bar {
+    height: 26px;
+    background: linear-gradient(180deg, rgba(30, 30, 30, 0.95) 0%, rgba(26, 26, 26, 0.95) 100%);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 14px;
+    font-size: 11px;
+    color: var(--text-secondary);
+    backdrop-filter: blur(8px);
+    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.accent-text {
+    color: var(--accent-color);
+    font-weight: 500;
+}

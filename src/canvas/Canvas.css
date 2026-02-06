@@ -1,0 +1,106 @@
+.canvas-container {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+    background-color: var(--bg-color);
+}
+
+.canvas-react-flow {
+    width: 100%;
+    height: 100%;
+}
+
+.react-flow__pane {
+    cursor: crosshair;
+}
+
+.eraser-cursor .react-flow__pane,
+.eraser-cursor .react-flow__edge {
+    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m20 20-5-5'/%3E%3Cpath d='m7 18 5-5 5 5 2-2-5-5 5-5-2-2-5 5-5-5-2 2 5 5-5 5 2 2Z'/%3E%3C/svg%3E"), auto !important;
+}
+
+.react-flow__background {
+    background-color: var(--bg-color);
+}
+
+/* Polished Smooth Edges */
+.react-flow__edge-path {
+    stroke: #6b7280 !important;
+    stroke-width: 2 !important;
+    transition: stroke 0.3s ease, stroke-width 0.3s ease, opacity 0.3s ease;
+    opacity: 0.6;
+}
+
+.react-flow__edge.selected .react-flow__edge-path {
+    stroke: var(--accent-color) !important;
+    stroke-width: 3 !important;
+    opacity: 1;
+}
+
+.react-flow__edge:hover .react-flow__edge-path {
+    stroke: #9ca3af !important;
+    stroke-width: 2.5 !important;
+    opacity: 0.9;
+}
+
+.react-flow__edge-text {
+    fill: var(--text-secondary);
+    font-size: 11px;
+}
+
+/* Edge markers (arrows) */
+.react-flow__edge .react-flow__edge-path {
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.react-flow__controls {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(10px);
+    border-radius: var(--radius-sm);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.react-flow__controls-button {
+    border-bottom: 1px solid var(--glass-border);
+    fill: var(--text-secondary);
+}
+
+.react-flow__controls-button:hover {
+    background: var(--surface-hover);
+    fill: var(--accent-color);
+}
+
+.react-flow__attribution {
+    background: transparent !important;
+    opacity: 0.3;
+}
+
+/* Preview Section */
+.canvas-preview {
+    position: absolute;
+    bottom: 40px;
+    right: 20px;
+    width: 200px;
+    height: 120px;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md);
+    backdrop-filter: blur(12px);
+    z-index: 100;
+    pointer-events: none;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+.canvas-preview-label {
+    position: absolute;
+    top: 4px;
+    left: 8px;
+    font-size: 9px;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
