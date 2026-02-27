@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
     ReactFlow,
     Background,
@@ -18,11 +18,16 @@ import '@xyflow/react/dist/style.css';
 import { canvasStore } from '../state/canvas.store';
 import { uiStore } from '../state/ui.store';
 import { MarkdownNode } from './nodes/MarkdownNode';
+import { DeletableEdge } from './edges/DeletableEdge';
 import { nanoid } from 'nanoid';
 import './Canvas.css';
 
 const nodeTypes = {
     markdown: MarkdownNode,
+};
+
+const edgeTypes = {
+    default: DeletableEdge,
 };
 
 const connectionSelector = (state: any) => state.connection;
@@ -48,22 +53,11 @@ const CanvasInner = () => {
             // But actually, React Flow changes need to be pushed TO the store.
             setNodes(state.nodes as any);
             setEdges(state.edges as any);
-            return true;
         });
-        return () => { unsub(); };
+        return () => unsub();
     }, [setNodes, setEdges]);
 
-    const onNodesChange = useCallback((changes: any) => {
-        _onNodesChange(changes);
-        // Sync to store after a short delay or immediately
-        const currentNodes = canvasStore.getState().nodes;
-        // In a real app we'd apply changes to the store too
-        // For now, we'll let the local state handle the drag and sync on drag end or just keep them in sync
-    }, [_onNodesChange]);
 
-    const onEdgesChange = useCallback((changes: any) => {
-        _onEdgesChange(changes);
-    }, [_onEdgesChange]);
 
     const onConnect: OnConnect = useCallback(
         (params) => {
@@ -106,7 +100,7 @@ const CanvasInner = () => {
         [screenToFlowPosition, connection]
     );
 
-    const onEdgeClick = useCallback((event: React.MouseEvent, edge: any) => {
+    const onEdgeClick = useCallback((_: React.MouseEvent, edge: any) => {
         if (uiStore.getState().eraserMode) {
             canvasStore.removeEdge(edge.id);
         }
@@ -134,8 +128,9 @@ const CanvasInner = () => {
                 onNodeDragStop={onNodeDragStop}
                 onSelectionChange={onSelectionChange}
                 nodeTypes={nodeTypes}
+                edgeTypes={edgeTypes as any}
                 defaultEdgeOptions={{
-                    type: 'smoothstep',
+                    type: 'default',
                     markerEnd: {
                         type: MarkerType.ArrowClosed,
                         width: 18,
@@ -179,7 +174,5 @@ const CanvasInner = () => {
 };
 
 export const Canvas = () => (
-    <ReactFlowProvider>
-        <CanvasInner />
-    </ReactFlowProvider>
+    <CanvasInner />
 );

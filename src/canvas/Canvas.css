@@ -24,6 +24,27 @@
     background-color: var(--bg-color);
 }
 
+.edge-delete-button {
+    width: 20px;
+    height: 20px;
+    background: #ef4444;
+    border: 2px solid #fff;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    z-index: 10;
+}
+
+.edge-delete-button:hover {
+    transform: scale(1.2);
+    background: #dc2626;
+}
+
 /* Polished Smooth Edges */
 .react-flow__edge-path {
     stroke: #6b7280 !important;

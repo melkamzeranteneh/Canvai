@@ -12,9 +12,7 @@ export const canvasStore = {
     getState: () => state,
     subscribe: (listener: Listener) => {
         listeners.add(listener);
-        return () => {
-            listeners.delete(listener);
-        };
+        return () => { listeners.delete(listener); };
     },
     setState: (newState: Partial<CanvasState>) => {
         state = { ...state, ...newState };

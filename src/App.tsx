@@ -7,6 +7,8 @@ import './App.css';
 
 import { AIModal } from './ui/components/AIModal';
 
+import { ReactFlowProvider } from '@xyflow/react';
+
 const App: React.FC = () => {
   useEffect(() => {
     // Add some initial nodes for demo
@@ -41,17 +43,19 @@ const App: React.FC = () => {
   }, []);
 
   return (
-    <div className="app-container">
-      <Toolbar />
-      <main className="main-content">
-        <Canvas />
-      </main>
-      <AIModal />
-      <div className="status-bar">
-        <span>Brainstorm v1.0.0</span>
-        <span className="accent-text">Local-First</span>
+    <ReactFlowProvider>
+      <div className="app-container">
+        <Toolbar />
+        <main className="main-content">
+          <Canvas />
+        </main>
+        <AIModal />
+        <div className="status-bar">
+          <span>Brainstorm v1.0.0</span>
+          <span className="accent-text">Local-First</span>
+        </div>
       </div>
-    </div>
+    </ReactFlowProvider>
   );
 };
 

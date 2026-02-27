@@ -29,7 +29,7 @@ export const uiStore = {
     getState: () => state,
     subscribe: (listener: Listener) => {
         listeners.add(listener);
-        return () => listeners.delete(listener);
+        return () => { listeners.delete(listener); };
     },
     setState: (updates: Partial<UIState>) => {
         state = { ...state, ...updates };

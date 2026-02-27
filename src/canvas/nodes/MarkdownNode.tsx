@@ -128,17 +128,17 @@ export const MarkdownNode = ({ data: _data, id, selected }: NodeProps) => {
             </div>
 
             {/* React Flow Handles */}
-            <Handle type="target" position={Position.Top} className="node-handle top" />
-            <Handle type="source" position={Position.Top} className="node-handle top" />
+            <Handle type="target" position={Position.Top} id="t-top" className="node-handle top" />
+            <Handle type="source" position={Position.Top} id="s-top" className="node-handle top" />
 
-            <Handle type="target" position={Position.Right} className="node-handle right" />
-            <Handle type="source" position={Position.Right} className="node-handle right" />
+            <Handle type="target" position={Position.Right} id="t-right" className="node-handle right" />
+            <Handle type="source" position={Position.Right} id="s-right" className="node-handle right" />
 
-            <Handle type="target" position={Position.Bottom} className="node-handle bottom" />
-            <Handle type="source" position={Position.Bottom} className="node-handle bottom" />
+            <Handle type="target" position={Position.Bottom} id="t-bottom" className="node-handle bottom" />
+            <Handle type="source" position={Position.Bottom} id="s-bottom" className="node-handle bottom" />
 
-            <Handle type="target" position={Position.Left} className="node-handle left" />
-            <Handle type="source" position={Position.Left} className="node-handle left" />
+            <Handle type="target" position={Position.Left} id="t-left" className="node-handle left" />
+            <Handle type="source" position={Position.Left} id="s-left" className="node-handle left" />
         </div>
     );
 };

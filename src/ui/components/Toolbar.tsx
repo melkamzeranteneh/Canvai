@@ -3,9 +3,11 @@ import { canvasStore } from '../../state/canvas.store';
 import { uiStore } from '../../state/ui.store';
 import { generateId } from '../../utils/id';
 import { useState, useEffect } from 'react';
+import { useReactFlow } from '@xyflow/react';
 import './Toolbar.css';
 
 export const Toolbar: React.FC = () => {
+    const { screenToFlowPosition, getViewport } = useReactFlow();
     const [eraserMode, setEraserMode] = useState(uiStore.getState().eraserMode);
 
     useEffect(() => {
@@ -16,10 +18,15 @@ export const Toolbar: React.FC = () => {
     }, []);
 
     const addNode = () => {
+        const viewport = getViewport();
+        // Calculate center of the current screen in flow coordinates
+        const centerX = -viewport.x / viewport.zoom + (window.innerWidth / 2) / viewport.zoom;
+        const centerY = -viewport.y / viewport.zoom + (window.innerHeight / 2) / viewport.zoom;
+
         canvasStore.addNode({
             id: generateId('node_'),
             type: 'markdown',
-            position: { x: 50, y: 50 },
+            position: { x: centerX - 150, y: centerY - 100 },
             data: { content: '' },
             width: 300,
             height: 200
