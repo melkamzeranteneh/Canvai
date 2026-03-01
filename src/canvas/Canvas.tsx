@@ -2,11 +2,8 @@ import { useCallback, useEffect, useState } from 'react';
 import {
     ReactFlow,
     Background,
-    Controls,
-    MiniMap,
     useNodesState,
     useEdgesState,
-    ReactFlowProvider,
     useReactFlow,
     BackgroundVariant,
     MarkerType,
@@ -37,8 +34,8 @@ const CanvasInner = () => {
     const connection = useStore(connectionSelector);
     const [eraserMode, setEraserMode] = useState(uiStore.getState().eraserMode);
 
-    const [nodes, setNodes, _onNodesChange] = useNodesState(canvasStore.getState().nodes as any);
-    const [edges, setEdges, _onEdgesChange] = useEdgesState(canvasStore.getState().edges as any);
+    const [nodes, setNodes, onNodesChange] = useNodesState(canvasStore.getState().nodes as any);
+    const [edges, setEdges, onEdgesChange] = useEdgesState(canvasStore.getState().edges as any);
 
     useEffect(() => {
         const unsubscribe = uiStore.subscribe(state => {
@@ -49,15 +46,11 @@ const CanvasInner = () => {
 
     useEffect(() => {
         const unsub = canvasStore.subscribe((state) => {
-            // Update local state ONLY if it's different to prevent infinite loops or jumps
-            // But actually, React Flow changes need to be pushed TO the store.
             setNodes(state.nodes as any);
             setEdges(state.edges as any);
         });
         return () => unsub();
     }, [setNodes, setEdges]);
-
-
 
     const onConnect: OnConnect = useCallback(
         (params) => {
@@ -76,25 +69,25 @@ const CanvasInner = () => {
                 const position = screenToFlowPosition({ x: clientX, y: clientY });
                 const newNodeId = nanoid();
 
-                // Small delay to ensure connection state is still valid if needed, 
-                // but usually fine to do immediately.
                 const newNode = {
                     id: newNodeId,
                     type: 'markdown',
-                    position: { x: position.x - 150, y: position.y - 100 },
-                    data: { content: '', width: 300, height: 200 },
+                    position: { x: position.x - 160, y: position.y - 100 },
+                    data: {
+                        title: 'New Idea',
+                        content: '',
+                        cardType: 'detail',
+                        category: 'Expansion',
+                    },
                 };
 
                 canvasStore.addNode(newNode as any);
 
-                const newEdge = {
+                canvasStore.addEdge({
                     id: nanoid(),
                     source: connection.fromNodeId,
-                    sourceHandle: connection.fromHandleId,
                     target: newNodeId,
-                    targetHandle: null,
-                };
-                canvasStore.addEdge(newEdge as any);
+                } as any);
             }
         },
         [screenToFlowPosition, connection]
@@ -120,8 +113,8 @@ const CanvasInner = () => {
             <ReactFlow
                 nodes={nodes}
                 edges={edges}
-                onNodesChange={_onNodesChange}
-                onEdgesChange={_onEdgesChange}
+                onNodesChange={onNodesChange}
+                onEdgesChange={onEdgesChange}
                 onConnect={onConnect}
                 onConnectEnd={onConnectEnd}
                 onEdgeClick={onEdgeClick}
@@ -133,40 +126,26 @@ const CanvasInner = () => {
                     type: 'default',
                     markerEnd: {
                         type: MarkerType.ArrowClosed,
-                        width: 18,
-                        height: 18,
-                        color: '#6b7280',
+                        width: 14,
+                        height: 14,
+                        color: 'var(--accent-color)',
                     },
                     style: {
-                        strokeWidth: 2,
-                        stroke: '#6b7280',
+                        strokeWidth: 3,
+                        stroke: 'rgba(16,185,129,0.85)',
                     },
                     animated: false,
                 }}
-                defaultViewport={{ x: 0, y: 0, zoom: 0.6 }}
+                defaultViewport={{ x: 0, y: 0, zoom: 0.8 }}
                 className="canvas-react-flow"
-                colorMode="dark"
+                colorMode="light"
+                fitView
             >
                 <Background
-                    gap={20}
+                    gap={25}
                     size={1}
-                    color="rgba(255, 255, 255, 0.08)"
+                    color="rgba(0, 0, 0, 0.03)"
                     variant={BackgroundVariant.Dots}
-                />
-                <Controls />
-                <MiniMap
-                    style={{
-                        background: 'var(--glass-bg)',
-                        border: '1px solid var(--glass-border)',
-                        borderRadius: 'var(--radius-md)',
-                        bottom: 20,
-                        right: 20,
-                        width: 200,
-                        height: 150
-                    }}
-                    nodeColor="#333"
-                    maskColor="rgba(0, 0, 0, 0.4)"
-                    ariaLabel="Canvas Overview"
                 />
             </ReactFlow>
         </div>

@@ -3,6 +3,7 @@ import type { AIProvider } from '../types/ai';
 export interface EnvConfig {
     openaiApiKey: string;
     geminiApiKey: string;
+    mistralApiKey: string;
     activeProvider: AIProvider;
     defaultModel: string;
 }
@@ -14,23 +15,28 @@ export interface EnvConfig {
 export function getEnvConfig(): EnvConfig {
     const openaiApiKey = import.meta.env.VITE_OPENAI_API_KEY || '';
     const geminiApiKey = import.meta.env.VITE_GEMINI_API_KEY || '';
+    const mistralApiKey = import.meta.env.VITE_MISTRAL_API_KEY || '';
 
     // Determine active provider based on available API keys
-    // Prefer OpenAI if both are available
-    let activeProvider: AIProvider = 'openai';
-    let defaultModel = 'gpt-3.5-turbo';
+    // Priority: Mistral > OpenAI > Gemini
+    let activeProvider: AIProvider = 'mistral';
+    let defaultModel = 'mistral-large-latest';
 
-    if (openaiApiKey) {
+    if (mistralApiKey) {
+        activeProvider = 'mistral';
+        defaultModel = 'mistral-large-latest';
+    } else if (openaiApiKey) {
         activeProvider = 'openai';
-        defaultModel = 'gpt-3.5-turbo'; // Older, more quota-friendly model
+        defaultModel = 'gpt-3.5-turbo';
     } else if (geminiApiKey) {
         activeProvider = 'gemini';
-        defaultModel = 'gemini-1.5-flash-8b'; // Smaller, faster model
+        defaultModel = 'gemini-1.5-flash-8b';
     }
 
     return {
         openaiApiKey,
         geminiApiKey,
+        mistralApiKey,
         activeProvider,
         defaultModel,
     };
@@ -46,6 +52,8 @@ export function getApiKey(provider: AIProvider): string {
         return config.openaiApiKey;
     } else if (provider === 'gemini') {
         return config.geminiApiKey;
+    } else if (provider === 'mistral') {
+        return config.mistralApiKey;
     }
 
     return '';

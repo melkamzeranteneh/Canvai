@@ -5,6 +5,7 @@ import { generateId } from '../../utils/id';
 import { useState, useEffect } from 'react';
 import { useReactFlow } from '@xyflow/react';
 import './Toolbar.css';
+import Card from './Card';
 
 export const Toolbar: React.FC = () => {
     const { screenToFlowPosition, getViewport } = useReactFlow();
@@ -38,7 +39,7 @@ export const Toolbar: React.FC = () => {
     };
 
     return (
-        <div className="toolbar">
+        <Card className="toolbar" compact>
             <div className="toolbar-section">
                 <button
                     className={`toolbar-btn ${!eraserMode ? 'active' : ''}`}
@@ -71,6 +72,6 @@ export const Toolbar: React.FC = () => {
                     <span>Ask AI</span>
                 </button>
             </div>
-        </div>
+        </Card>
     );
 };

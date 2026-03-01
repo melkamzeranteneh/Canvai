@@ -6,27 +6,107 @@
     background-color: var(--bg-color);
 }
 
+.app-header {
+    height: 64px;
+    background: #ffffff;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    justify-content: space-between;
+    z-index: 101;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.logo-wrapper {
+    width: 32px;
+    height: 32px;
+    background: var(--accent-color);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+}
+
+.project-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.project-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.project-path {
+    font-size: 11px;
+    color: var(--text-secondary);
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.header-btn {
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: 8px;
+    transition: all 0.2s;
+}
+
+.header-btn.secondary {
+    background: #f1f5f9;
+    color: var(--text-primary);
+}
+
+.header-btn.secondary.active {
+    background: var(--accent-color);
+    color: #fff;
+}
+
+.header-btn.primary {
+    background: var(--text-primary);
+    color: #fff;
+}
+
+.main-layout {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+    position: relative;
+    background: var(--bg-color);
+}
+
 .main-content {
     flex: 1;
     position: relative;
     overflow: hidden;
+    height: 100%;
 }
 
 .status-bar {
-    height: 26px;
-    background: linear-gradient(180deg, rgba(30, 30, 30, 0.95) 0%, rgba(26, 26, 26, 0.95) 100%);
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    height: 32px;
+    background: #ffffff;
+    border-top: 1px solid var(--border-color);
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0 14px;
+    padding: 0 24px;
     font-size: 11px;
     color: var(--text-secondary);
-    backdrop-filter: blur(8px);
-    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .accent-text {
     color: var(--accent-color);
-    font-weight: 500;
+    font-weight: 600;
 }

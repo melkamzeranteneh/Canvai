@@ -12,9 +12,43 @@ export class AIClient {
             return this.completeOpenAI(prompt, systemPrompt);
         } else if (this.config.provider === 'gemini') {
             return this.completeGemini(prompt, systemPrompt);
+        } else if (this.config.provider === 'mistral') {
+            return this.completeMistral(prompt, systemPrompt);
         }
 
         throw new Error(`Provider ${this.config.provider} not supported`);
+    }
+
+    private async completeMistral(prompt: string, systemPrompt?: string): Promise<AIResponse> {
+        const response = await fetch('https://api.mistral.ai/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${this.config.apiKey}`
+            },
+            body: JSON.stringify({
+                model: this.config.model,
+                messages: [
+                    ...(systemPrompt ? [{ role: 'system', content: systemPrompt }] : []),
+                    { role: 'user', content: prompt }
+                ],
+                temperature: 0.7
+            })
+        });
+
+        if (!response.ok) {
+            const err = await response.json().catch(() => ({}));
+            throw new Error(err.error?.message || `Mistral request failed with status ${response.status}`);
+        }
+
+        const data = await response.json();
+        return {
+            content: data.choices[0].message.content,
+            usage: {
+                promptTokens: data.usage.prompt_tokens,
+                completionTokens: data.usage.completion_tokens
+            }
+        };
     }
 
     private async completeOpenAI(prompt: string, systemPrompt?: string): Promise<AIResponse> {

@@ -1,31 +1,28 @@
 :root {
-  --bg-color: #1a1a1a;
-  /* Obsidian black */
-  --surface-color: #262626;
-  /* Obsidian gray */
-  --surface-hover: #333333;
-  --border-color: #404040;
-  --text-primary: #ffffff;
-  --text-secondary: #999999;
-  --accent-color: #7b61ff;
-  /* Obsidian-like purple-blue accent */
-  /* Sky 400 - Blueprint blue */
-  --accent-hover: #0ea5e9;
-  /* Sky 500 */
-  --selection-color: rgba(56, 189, 248, 0.2);
+  --bg-color: #f8f9fb;
+  --surface-color: #ffffff;
+  --surface-hover: #f1f5f9;
+  --border-color: #e2e8f0;
+  --text-primary: #1e293b;
+  --text-secondary: #64748b;
+  --accent-color: #10b981; /* Green accent */
+  --accent-hover: #059669;
+  --selection-color: rgba(124, 58, 237, 0.1);
   --delete-color: #ef4444;
 
-  --glass-bg: rgba(15, 23, 42, 0.8);
-  --glass-border: rgba(255, 255, 255, 0.1);
-  --blueprint-grid: rgba(56, 189, 248, 0.1);
-  --blueprint-major: rgba(56, 189, 248, 0.2);
+  --glass-bg: rgba(255, 255, 255, 0.9);
+  --glass-border: rgba(0, 0, 0, 0.05);
+  --blueprint-grid: rgba(203, 213, 225, 0.2);
+  --blueprint-major: rgba(203, 213, 225, 0.4);
 
-  --grad-primary: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-  --grad-accent: linear-gradient(135deg, #38bdf8 0%, #0ea5e9 100%);
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
 
   --font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  --radius-sm: 6px;
-  --radius-md: 10px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
 }
 
 * {

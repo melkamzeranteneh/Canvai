@@ -1,13 +1,11 @@
-import React from 'react';
 import {
     BaseEdge,
     EdgeLabelRenderer,
-    getSmoothStepPath,
+    getBezierPath,
     type EdgeProps,
 } from '@xyflow/react';
 import { X } from 'lucide-react';
 import { canvasStore } from '../../state/canvas.store';
-import { uiStore } from '../../state/ui.store';
 
 export const DeletableEdge = ({
     id,
@@ -21,42 +19,66 @@ export const DeletableEdge = ({
     markerEnd,
     selected,
 }: EdgeProps) => {
-    const [edgePath, labelX, labelY] = getSmoothStepPath({
+    const [edgePath, labelX, labelY] = getBezierPath({
         sourceX,
         sourceY,
         sourcePosition,
         targetX,
         targetY,
         targetPosition,
+        curvature: 0.2,
     });
 
-    const isEraserMode = uiStore.getState().eraserMode;
-
-    const onEdgeClick = (evt: React.MouseEvent) => {
-        evt.stopPropagation();
+    const onEdgeRemove = (e: React.MouseEvent) => {
+        e.stopPropagation();
         canvasStore.removeEdge(id);
     };
 
     return (
         <>
-            <BaseEdge path={edgePath} markerEnd={markerEnd} style={style} />
-            {(selected || isEraserMode) && (
+            <BaseEdge path={edgePath} markerEnd={markerEnd} style={{
+                ...style,
+                strokeWidth: selected ? 4 : 2,
+                stroke: selected ? 'var(--accent-color)' : 'rgba(108,117,125,0.6)',
+                transition: 'stroke 0.2s ease',
+            }} />
+
+            {/* Wider invisible path for interaction */}
+            <path
+                d={edgePath}
+                fill="none"
+                strokeOpacity={0}
+                strokeWidth={20}
+                className="react-flow__edge-interaction"
+            />
+
+            {selected && (
                 <EdgeLabelRenderer>
                     <div
                         style={{
                             position: 'absolute',
                             transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
-                            fontSize: 12,
                             pointerEvents: 'all',
+                            zIndex: 1000,
                         }}
-                        className="nodrag nopan"
                     >
                         <button
-                            className="edge-delete-button"
-                            onClick={onEdgeClick}
-                            title="Delete edge"
+                            onClick={onEdgeRemove}
+                            style={{
+                                width: 24,
+                                height: 24,
+                                borderRadius: '50%',
+                                background: '#1e293b',
+                                border: 'none',
+                                color: 'white',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                boxShadow: '0 4px 10px rgba(0,0,0,0.1)'
+                            }}
                         >
-                            <X size={10} />
+                            <X size={12} />
                         </button>
                     </div>
                 </EdgeLabelRenderer>

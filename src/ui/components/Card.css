@@ -1,0 +1,27 @@
+.cv-card {
+    background: var(--surface-color);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 10px;
+    box-shadow: var(--shadow-sm);
+}
+
+.cv-card.compact {
+    padding: 6px;
+}
+
+.cv-card .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.cv-card .card-title {
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.cv-card .card-accent {
+    color: var(--accent-color);
+}
