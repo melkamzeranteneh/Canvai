@@ -1,235 +1,478 @@
+/* ═══════════════════════════════════════════════════════
+   PREMIUM CARD  —  clean Google-style white card
+═══════════════════════════════════════════════════════ */
+
+/* ─── Base ─────────────────────────────────────────── */
 .node.premium-card {
-    background: #ffffff;
-    border: 1px solid rgba(0, 0, 0, 0.05);
-    border-radius: 36px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.04), 0 2px 10px rgba(0, 0, 0, 0.02);
+    background: var(--surface-color);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
     display: flex;
     flex-direction: column;
-    padding: 24px;
     position: relative;
-    overflow: visible;
-    /* Changed from hidden to allow handles and growth */
-    transition: all 0.3s cubic-bezier(0.2, 0, 0, 1);
+    /* height grows with content */
     height: auto !important;
-    /* Allow responsive height */
-    min-height: 180px;
+    width: 320px;
+    min-width: unset;
+    min-height: 100px;
+    transition: box-shadow 0.2s ease, border-color 0.2s ease;
+    /* overflow visible so handles + add-btns can poke outside */
+    overflow: visible;
 }
 
 .node.premium-card:hover {
-    transform: translateY(-4px) scale(1.01);
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.06), 0 4px 15px rgba(0, 0, 0, 0.03);
-    border-color: rgba(0, 0, 0, 0.1);
+    box-shadow: var(--shadow-lg);
+    border-color: rgba(0, 0, 0, 0.12);
 }
 
 .node.premium-card.selected {
-    box-shadow: 0 0 0 3px var(--accent-color), 0 30px 60px rgba(0, 0, 0, 0.08);
-    border-color: transparent;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 2px var(--accent-glow), var(--shadow-lg);
 }
 
-/* Card Header */
-.card-top-row {
+/* ─── Type top-stripe ───────────────────────────────── */
+.card-type-stripe {
+    height: 3px;
+    border-radius: var(--radius-md) var(--radius-md) 0 0;
+    flex-shrink: 0;
+}
+
+.node.premium-card.ai .card-type-stripe {
+    background: #7c3aed;
+}
+
+.node.premium-card.main .card-type-stripe {
+    background: var(--accent-color);
+}
+
+.node.premium-card.detail .card-type-stripe {
+    background: #ef4444;
+}
+
+.node.premium-card.default .card-type-stripe {
+    background: #e5e7eb;
+}
+
+/* ─── Header ────────────────────────────────────────── */
+.card-header {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    margin-bottom: 24px;
-    z-index: 2;
+    gap: 10px;
+    padding: 12px 12px 8px;
 }
 
-.brand-logo {
-    width: 38px;
-    height: 38px;
-    border-radius: 50%;
+/* Drag handle used to move the node when dragging */
+.drag-handle {
+    width: 20px;
+    height: 20px;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #f1f5f9;
+    color: var(--text-muted);
+    cursor: grab;
+    flex-shrink: 0;
 }
 
-.brand-logo.ai {
-    background: #eff6ff;
-    color: #3b82f6;
+.drag-handle:hover {
+    color: var(--text-secondary);
 }
 
-.brand-logo.main {
-    background: #ecfdf5;
-    color: #10b981;
+.card-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
 }
 
-.brand-logo.detail {
-    background: #fef2f2;
-    color: #ef4444;
+.node.premium-card.default .card-icon {
+    background: #f1f3f4;
+    color: #5f6368;
 }
 
-.card-badge-pill {
-    font-size: 11px;
-    font-weight: 700;
-    color: #10b981;
-    background: #ecfdf5;
-    padding: 4px 12px;
-    border-radius: 20px;
-    text-transform: capitalize;
+.node.premium-card.ai .card-icon {
+    background: #f3e8ff;
+    color: #7c3aed;
 }
 
-/* Card Body */
-.card-main-content {
+.node.premium-card.main .card-icon {
+    background: #d1fae5;
+    color: #059669;
+}
+
+.node.premium-card.detail .card-icon {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.card-title-block {
     flex: 1;
-    display: flex;
-    flex-direction: column;
-    z-index: 2;
-    padding-bottom: 40px;
-    /* Space for floating actions */
-}
-
-.card-category-label {
-    font-size: 12px;
-    font-weight: 600;
-    color: #64748b;
-    margin-bottom: 4px;
-    text-transform: capitalize;
-}
-
-.card-main-title {
-    font-size: 26px;
-    line-height: 1.1;
-    font-weight: 800;
-    color: #1e293b;
-    margin: 0 0 16px 0;
-    font-family: 'Inter', -apple-system, sans-serif;
-    letter-spacing: -0.02em;
-}
-
-.card-stats-row {
-    display: flex;
-    gap: 32px;
-    margin-bottom: 16px;
-}
-
-.stat-box {
+    min-width: 0;
     display: flex;
     flex-direction: column;
     gap: 2px;
 }
 
-.stat-label {
-    font-size: 11px;
+.card-title {
+    font-size: 13px;
     font-weight: 600;
-    color: #94a3b8;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.3;
+    letter-spacing: -0.01em;
 }
 
-.stat-value {
-    font-size: 14px;
-    font-weight: 700;
-    color: #1e293b;
+.card-subtitle {
+    font-size: 10.5px;
+    color: var(--text-muted);
+    font-weight: 400;
+    line-height: 1;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
 }
 
-/* Floating Actions */
-.card-floating-actions {
-    position: absolute;
-    bottom: 20px;
-    left: 24px;
-    display: flex;
-    gap: 8px;
-    z-index: 10;
+.card-badge {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 20px;
+    flex-shrink: 0;
+    letter-spacing: 0.02em;
 }
 
-.float-action-btn {
-    width: 32px;
-    height: 32px;
+.node.premium-card.ai .card-badge {
+    background: #f3e8ff;
+    color: #7c3aed;
+}
+
+.node.premium-card.main .card-badge {
+    background: #d1fae5;
+    color: #059669;
+}
+
+.node.premium-card.detail .card-badge {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.node.premium-card.default .card-badge {
+    background: #f1f3f4;
+    color: #5f6368;
+}
+
+.card-menu {
+    width: 24px;
+    height: 24px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--accent-color);
-    color: #ffffff;
-    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.18);
-    border: none;
-    cursor: pointer;
-    transition: all 0.2s;
+    color: var(--text-muted);
+    opacity: 0;
+    transition: opacity 0.15s, background 0.15s;
+    flex-shrink: 0;
 }
 
-.float-action-btn:hover {
-    transform: scale(1.1);
-    filter: brightness(0.95);
+.node.premium-card:hover .card-menu {
+    opacity: 1;
 }
 
-.float-action-btn.delete {
-    background: #f1f5f9;
-    color: #64748b;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+.card-menu:hover {
+    background: var(--surface-hover);
+    color: var(--text-secondary);
 }
 
-.float-action-btn.delete:hover {
-    background: #ef4444;
-    color: #ffffff;
+/* ─── Divider ───────────────────────────────────────── */
+.card-rule {
+    height: 1px;
+    background: var(--border-subtle);
+    margin: 0 12px;
 }
 
-/* Background SVGs */
-.card-bg-svg {
-    position: absolute;
-    bottom: 0;
-    left: 0;
+/* ─── Content ───────────────────────────────────────── */
+.card-body {
+    padding: 8px 12px 12px;
+}
+
+.card-body.editing {
+    padding: 8px 12px 12px;
+}
+
+/* Markdown preview */
+.card-preview {
+    font-size: 12.5px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+.card-preview p {
+    margin-bottom: 5px;
+}
+
+.card-preview p:last-child {
+    margin-bottom: 0;
+}
+
+.card-preview ul,
+.card-preview ol {
+    margin-left: 14px;
+    margin-bottom: 5px;
+}
+
+.card-preview li {
+    margin-bottom: 1px;
+}
+
+.card-preview code {
+    background: #f1f3f4;
+    border-radius: 3px;
+    padding: 1px 5px;
+    font-size: 11px;
+    color: var(--accent-color);
+}
+
+.card-preview strong {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.card-preview em {
+    color: var(--text-muted);
+}
+
+.card-preview blockquote {
+    border-left: 2px solid var(--accent-color);
+    padding-left: 8px;
+    margin: 4px 0;
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+/* Hint text */
+.card-hint {
+    font-size: 11.5px;
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+/* Edit inputs */
+.card-edit-title {
     width: 100%;
-    height: 120px;
-    /* Fixed height relative to card bottom */
-    pointer-events: none;
-    z-index: 1;
-}
-
-/* Markdown and Editor */
-.card-markdown-preview {
     font-size: 13px;
-    color: #64748b;
-    line-height: 1.5;
-}
-
-.card-title-input {
-    width: 100%;
-    font-size: 26px;
-    font-weight: 800;
-    border: none;
+    font-weight: 600;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 5px 8px;
     outline: none;
-    color: #1e293b;
-    background: #f8fafc;
-    border-radius: 8px;
-    padding: 4px 8px;
-    margin-bottom: 12px;
+    color: var(--text-primary);
+    background: var(--surface-hover);
+    font-family: inherit;
+    margin-bottom: 6px;
+    letter-spacing: -0.01em;
+    transition: border-color 0.15s;
 }
 
-.card-content-editor {
+.card-edit-title:focus {
+    border-color: var(--accent-color);
+    background: #fff;
+}
+
+.card-edit-body {
     width: 100%;
-    min-height: 120px;
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
-    padding: 12px;
-    font-size: 13px;
+    min-height: 72px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 7px 10px;
+    font-size: 12.5px;
     outline: none;
     resize: none;
     font-family: inherit;
-    color: #475569;
+    color: var(--text-secondary);
+    background: var(--surface-hover);
+    line-height: 1.6;
+    transition: border-color 0.15s;
 }
 
-/* Premium Handles */
-.premium-handle {
-    width: 12px !important;
-    height: 12px !important;
-    background: #ffffff !important;
-    border: 1.5px solid #cbd5e1 !important;
-    border-radius: 50% !important;
-    opacity: 0 !important;
-    transition: all 0.2s !important;
+.card-edit-body:focus {
+    border-color: var(--accent-color);
+    background: #fff;
 }
 
-.node.premium-card:hover .premium-handle,
-.node.premium-card.selected .premium-handle {
-    opacity: 1 !important;
+/* ─── Action bar (AI + delete, on hover) ────────────── */
+.card-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    position: absolute;
+    top: 10px;
+    right: 36px;
+    opacity: 0;
+    transition: opacity 0.15s;
+    z-index: 20;
 }
 
-.premium-handle:hover {
+.node.premium-card:hover .card-actions {
+    opacity: 1;
+}
+
+.card-action-btn {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-size: 11px;
+}
+
+.card-action-btn.ai {
+    background: var(--accent-dim);
+    color: var(--accent-color);
+}
+
+.card-action-btn.ai:hover {
+    background: var(--accent-color);
+    color: #fff;
+}
+
+.card-action-btn.del {
+    background: #f1f3f4;
+    color: var(--text-muted);
+}
+
+.card-action-btn.del:hover {
+    background: #fee2e2;
+    color: var(--delete-color);
+}
+
+/* ─── NodeResizer (selection handles) ──────────────── */
+/* These are rendered by ReactFlow — just tint to green */
+.react-flow__resize-control.handle {
     background: var(--accent-color) !important;
-    border-color: var(--accent-color) !important;
-    transform: scale(1.3);
+    border: 2px solid #fff !important;
+    border-radius: 3px !important;
+    width: 8px !important;
+    height: 8px !important;
 }
 
+/* ─── Connection handles — completely hidden by default ─ */
+/* Only appear as tiny invisible hit-zones; visually
+   no dot/circle shows unless the user is actively dragging
+   a connection line (handled via .connecting class on body) */
+.premium-handle {
+    width: 10px !important;
+    height: 10px !important;
+    background: var(--surface-hover) !important;
+    border: 2px solid #fff !important;
+    border-radius: 50% !important;
+    opacity: 1 !important;
+    transition: box-shadow 0.12s, transform 0.12s !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+    z-index: 40;
+}
+
+/* Hover emphasis when interacting */
+.premium-handle:hover {
+    transform: scale(1.1);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.18);
+}
+
+/* (Removed visual change that showed handles during connection drag — per user request) */
+
+/* ─── 4-side "+" add-node buttons ───────────────────── */
+/* Base shared styles */
+.card-add-top,
+.card-add-right,
+.card-add-bottom,
+.card-add-left {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #fff;
+    border: 1.5px solid var(--border-color);
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 30;
+    opacity: 0;
+    transition: opacity 0.15s, transform 0.15s, background 0.15s, border-color 0.15s, color 0.15s;
+    box-shadow: var(--shadow-sm);
+    pointer-events: all;
+}
+
+/* Positions */
+.card-add-top {
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.card-add-bottom {
+    bottom: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.card-add-left {
+    left: -12px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.card-add-right {
+    right: -12px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+/* Show on card hover */
+.node.premium-card:hover .card-add-top,
+.node.premium-card:hover .card-add-right,
+.node.premium-card:hover .card-add-bottom,
+.node.premium-card:hover .card-add-left {
+    opacity: 1;
+}
+
+/* Hover state per button */
+.card-add-top:hover,
+.card-add-right:hover,
+.card-add-bottom:hover,
+.card-add-left:hover {
+    background: var(--accent-color);
+    border-color: var(--accent-color);
+    color: #fff;
+    box-shadow: 0 2px 8px var(--accent-glow);
+}
+
+/* Scale transforms for each direction on hover */
+.card-add-top:hover {
+    transform: translateX(-50%) scale(1.15);
+}
+
+.card-add-bottom:hover {
+    transform: translateX(-50%) scale(1.15);
+}
+
+.card-add-left:hover {
+    transform: translateY(-50%) scale(1.15);
+}
+
+.card-add-right:hover {
+    transform: translateY(-50%) scale(1.15);
+}
+
+/* ─── Animations ────────────────────────────────────── */
 @keyframes spin {
     from {
         transform: rotate(0deg);
@@ -241,5 +484,5 @@
 }
 
 .spin {
-    animation: spin 1s linear infinite;
+    animation: spin 0.8s linear infinite;
 }

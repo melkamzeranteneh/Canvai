@@ -4,7 +4,7 @@ import { Toolbar } from './ui/components/Toolbar';
 import { canvasStore } from './state/canvas.store';
 import { uiStore } from './state/ui.store';
 import { generateId } from './utils/id';
-import { Search, Sparkles } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 import './App.css';
 
 import { AIModal } from './ui/components/AIModal';
@@ -32,6 +32,8 @@ const App: React.FC = () => {
         id: node1Id,
         type: 'markdown',
         position: { x: 400, y: 100 },
+        width: 320,
+        height: 160,
         data: {
           title: 'Customer Onboarding',
           badge: 'Main',
@@ -45,6 +47,8 @@ const App: React.FC = () => {
         id: node2Id,
         type: 'markdown',
         position: { x: 100, y: 450 },
+        width: 320,
+        height: 160,
         data: {
           title: 'Sales Assignment',
           badge: 'AI Suggestion',
@@ -58,6 +62,8 @@ const App: React.FC = () => {
         id: node3Id,
         type: 'markdown',
         position: { x: 700, y: 450 },
+        width: 320,
+        height: 160,
         data: {
           title: 'Discarded Leads',
           badge: 'Archive',
@@ -90,32 +96,31 @@ const App: React.FC = () => {
               <Sparkles size={18} />
             </div>
             <div className="project-info">
-              <div className="project-title">Client onboarding</div>
-              <div className="project-path">Sales Operations / Flow Design</div>
+              <div className="project-title">Vinefordge</div>
+            </div>
+            {/* Embedded toolbar in the navbar */}
+            <div style={{ marginLeft: 18 }}>
+              <Toolbar />
             </div>
           </div>
           <div className="header-right">
-            <button className="search-btn"><Search size={18} /></button>
             <button
               className={`header-btn secondary ${eraserMode ? 'active' : ''}`}
               onClick={() => uiStore.setState({ eraserMode: !eraserMode })}
               title="Toggle Edit Tool"
             >
               {eraserMode ? <Eraser size={16} /> : <MousePointer2 size={16} />}
-              <span style={{ marginLeft: 8 }}>{eraserMode ? 'Eraser' : 'Edit'}</span>
             </button>
-            <button className="header-btn primary">Share</button>
           </div>
         </header>
         <div className="main-layout">
           <div className="main-content">
-            <Toolbar />
             <Canvas />
           </div>
           <AIModal />
-        </div>
+          </div>
         <div className="status-bar">
-          <span>Canvai v1.0.0</span>
+          <span>Vinefordge v1.0.0</span>
           <span className="accent-text">Connected to Mistral AI</span>
         </div>
       </div>

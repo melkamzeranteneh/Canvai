@@ -10,6 +10,9 @@ import './AIModal.css';
 import { Plus, Trash2, Check, X as XIcon } from 'lucide-react';
 import { canvasStore } from '../../state/canvas.store';
 import { generateId } from '../../utils/id';
+import { saveGraphToLocalStorage, getGraphPreviewString, applyImportedGraph } from '../../notes/storage/graph';
+import { confirmToast, loadingToast, toast } from '../../utils/toast';
+import { debounce } from '../../utils/debounce';
 
 interface CanvasAction {
     type: 'add_node' | 'remove_node' | 'add_edge' | 'remove_edge';
@@ -21,11 +24,12 @@ interface Message {
     role: 'user' | 'assistant';
     content: string;
     timestamp?: string;
-    action?: CanvasAction;
+    // support single or multiple actions
+    action?: CanvasAction | CanvasAction[];
 }
 
 export const AIModal: React.FC = () => {
-    const [isVisible, setIsVisible] = useState(false);
+    const [isVisible, setIsVisible] = useState(() => uiStore.getState().activeModal === 'ai');
     const [input, setInput] = useState('');
     const [messages, setMessages] = useState<Message[]>([
         {
@@ -35,6 +39,10 @@ export const AIModal: React.FC = () => {
     ]);
     const [isTyping, setIsTyping] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const [activeTab, setActiveTab] = useState<'chat' | 'json'>('chat');
+    const [jsonText, setJsonText] = useState(() => '{\n\n}');
+    const [isEditingJson, setIsEditingJson] = useState(false);
+    const mounted = useRef(true);
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -45,30 +53,111 @@ export const AIModal: React.FC = () => {
     }, [messages, isTyping]);
 
     useEffect(() => {
+        // subscribe to canvas and keep jsonText updated when not editing
+        const unsub = canvasStore.subscribe(state => {
+            if (!mounted.current) return;
+            if (!isEditingJson) setJsonText(getGraphPreviewString(state));
+        });
+        return () => { mounted.current = false; unsub(); };
+    }, [isEditingJson]);
+
+    // Content server endpoint used in dev: write/read Content.json
+    const CONTENT_URL = 'http://localhost:5177/content';
+
+    const loadContentFromServer = async () => {
+        try {
+            const res = await fetch(CONTENT_URL);
+            if (!res.ok) return;
+            const data = await res.json();
+            const pretty = JSON.stringify(data, null, 2);
+            setJsonText(pretty);
+            // apply to canvas if it looks like a canvas state
+            if (data && (data.nodes || data.edges)) {
+                canvasStore.setState({ nodes: data.nodes ?? [], edges: data.edges ?? [] });
+            }
+        } catch (e) {
+            // ignore network errors in dev
+        }
+    };
+
+    const saveContentToServer = async (obj: any) => {
+        try {
+            await fetch(CONTENT_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(obj),
+            });
+        } catch (e) {
+            console.error('Failed to save content to server', e);
+        }
+    };
+
+    useEffect(() => {
+        // On mount, attempt to load Content.json from local server
+        loadContentFromServer();
+    }, []);
+
+    useEffect(() => {
         const unsubscribe = uiStore.subscribe(state => {
+            console.log('AIModal: uiStore activeModal =', state.activeModal);
             setIsVisible(state.activeModal === 'ai');
         });
         return () => unsubscribe();
     }, []);
 
-    const parseAction = (text: string): { content: string; action?: CanvasAction } => {
-        const actionRegex = /<canvas_action>([\s\S]*?)<\/canvas_action>/;
-        const match = text.match(actionRegex);
+    const parseAction = (text: string): { content: string; action?: CanvasAction | CanvasAction[]; jsonUpdate?: any } => {
+        const actionRegex = /<canvas_action>([\s\S]*?)<\/canvas_action>/g;
+        const jsonRegex = /<json_update>([\s\S]*?)<\/json_update>/g;
+        const matches = Array.from(text.matchAll(actionRegex));
+        const actions: CanvasAction[] = [];
 
-        if (match) {
+        let cleaned = text;
+        for (const m of matches) {
             try {
-                const actionData = JSON.parse(match[1]);
-                return {
-                    content: text.replace(actionRegex, '').trim(),
-                    action: { ...actionData, status: 'pending' }
-                };
+                const actionData = JSON.parse(m[1]);
+                actions.push({ ...actionData, status: 'pending' });
+                cleaned = cleaned.replace(m[0], '');
             } catch (e) {
                 console.error('Failed to parse action JSON', e);
             }
         }
 
-        return { content: text };
+        // parse json_update block if present
+        const jsonMatch = jsonRegex.exec(text);
+        let parsedJson: any = undefined;
+        if (jsonMatch) {
+            try {
+                parsedJson = JSON.parse(jsonMatch[1]);
+                cleaned = cleaned.replace(jsonMatch[0], '');
+            } catch (e) {
+                console.error('Failed to parse json_update', e);
+            }
+        }
+
+        const result: { content: string; action?: CanvasAction | CanvasAction[]; jsonUpdate?: any } = { content: cleaned.trim() };
+        if (actions.length === 1) result.action = actions[0];
+        if (actions.length > 1) result.action = actions;
+        if (parsedJson !== undefined) result.jsonUpdate = parsedJson;
+        return result;
     };
+
+    // debounced apply for fast JSON sync
+    const debouncedApplyJson = useRef(debounce((text: string) => {
+        try {
+            const parsed = JSON.parse(text);
+            if (parsed && typeof parsed === 'object' && ('nodes' in parsed || 'edges' in parsed)) {
+                canvasStore.setState({ nodes: parsed.nodes ?? [], edges: parsed.edges ?? [] });
+                saveGraphToLocalStorage();
+                saveContentToServer(parsed);
+            } else {
+                applyImportedGraph(parsed);
+                // also persist imported format back to Content.json for consistency
+                saveContentToServer(parsed);
+            }
+        } catch (e) {
+            // ignore parse errors while typing
+        }
+    }, 500));
 
     const handleSend = async () => {
         if (!input.trim() || isTyping) return;
@@ -92,50 +181,103 @@ export const AIModal: React.FC = () => {
                 model: envConfig.defaultModel
             });
 
-            const currentNodes = canvasStore.getState().nodes;
-            const currentEdges = canvasStore.getState().edges;
-            const canvasContext = `Current Canvas State:
-Nodes: ${JSON.stringify(currentNodes.map(n => ({ id: n.id, title: n.data.title || n.data.content?.substring(0, 20) })))}
-Edges: ${JSON.stringify(currentEdges.map(e => ({ source: e.source, target: e.target, label: e.label })))}`;
+            // Prefer the disk-backed Content.json if available so AI and editor operate on same source of truth
+            let fullCanvasJson: string | null = null;
+            try {
+                const resp = await fetch(CONTENT_URL);
+                if (resp.ok) fullCanvasJson = await resp.text();
+            } catch (e) {
+                // ignore network error and fall back
+            }
 
-            const systemPrompt = `You are Alice Gem, a professional AI assistant for a brainstorm canvas application. 
-You can suggest actions to modify the canvas by including a <canvas_action> block in your response.
-Example for adding a node:
-<canvas_action>
+            const systemPrompt = `You are Alice Gem, an automated editing agent for the canvas. ONLY respond with a single <json_update>...</json_update> block containing valid JSON (no explanatory text, no markdown, no extra tags).
+
+The JSON inside <json_update> must be either:
+1) A full canvas state object with top-level keys "nodes" and "edges" OR
+2) The import-format object accepted by the application (index-based nodes with connectedTo lists).
+
+Rules:
+- Do not include any other text or tags outside the <json_update> block.
+- Ensure the JSON is valid and parsable.
+- If you intend to modify nodes/edges, provide the full resulting "nodes" and "edges" arrays when possible.
+
+Example response (full canvas state):
+<json_update>
 {
-  "type": "add_node",
-  "data": { "title": "New Node", "content": "Node description", "badge": "AI Suggestion" }
+    "nodes": [ { "id": "node_1", "type": "markdown", "position": { "x": 0, "y": 0 }, "data": { "title": "Hello" } } ],
+    "edges": [ { "id": "edge_1", "source": "node_1", "target": "node_2" } ]
 }
-</canvas_action>
+</json_update>
 
-Example for deleting a node:
-<canvas_action>
-{
-  "type": "remove_node",
-  "data": { "id": "node_id" }
-}
-</canvas_action>
+You will receive the current canvas JSON as a separate system message marked between <<<CANVAS_JSON_START>>> and <<<CANVAS_JSON_END>>>. Use that to inform edits. Do not reference the surrounding markers in your output.`; 
 
-Example for adding a connection:
-<canvas_action>
-{
-  "type": "add_edge",
-  "data": { "source": "node_a", "target": "node_b", "label": "connection" }
-}
-</canvas_action>
+            const loader = loadingToast('Alice is thinking...');
+            if (!fullCanvasJson) fullCanvasJson = JSON.stringify(canvasStore.getState());
+            const canvasJsonMessage = `<<<CANVAS_JSON_START>>>\n${fullCanvasJson}\n<<<CANVAS_JSON_END>>>`;
+            const response = await client.complete(userMessage, systemPrompt, [canvasJsonMessage]);
+            const { content, action, jsonUpdate } = parseAction(response.content);
 
-${canvasContext}
+            setMessages(prev => {
+                const next = [...prev, { role: 'assistant', content, action, jsonUpdate }];
+                return next;
+            });
 
-Always provide creative, structured, and helpful responses. Use markdown for better formatting. 
-When suggesting an action, explain why you think it's helpful and Wait for user confirmation.
-You can only suggest ONE action at a time.`;
+            // If AI provided a JSON update block, attempt to apply it immediately and update editor
+            if (jsonUpdate) {
+                try {
+                    // If JSON looks like full canvas state
+                    if (jsonUpdate && typeof jsonUpdate === 'object' && ('nodes' in jsonUpdate || 'edges' in jsonUpdate)) {
+                        // If nodes have missing positions, apply a horizontal auto-layout
+                        const nodes = Array.isArray(jsonUpdate.nodes) ? jsonUpdate.nodes : [];
+                        const edges = Array.isArray(jsonUpdate.edges) ? jsonUpdate.edges : [];
+                        const needLayout = nodes.length > 0 && nodes.some((n: any) => !n.position || (n.position.x === 0 && n.position.y === 0));
+                        if (needLayout) {
+                            let x = 100;
+                            const gap = 40;
+                            nodes.forEach((n: any) => {
+                                const w = n.width ?? 320;
+                                n.position = { x, y: n.position?.y ?? 100 };
+                                x += w + gap;
+                            });
+                            // If no edges provided, connect sequentially left -> right
+                            if (!edges || edges.length === 0) {
+                                for (let i = 0; i < nodes.length - 1; i++) {
+                                    edges.push({ id: generateId('edge_'), source: nodes[i].id, target: nodes[i + 1].id, label: '' });
+                                }
+                            }
+                            jsonUpdate.nodes = nodes;
+                            jsonUpdate.edges = edges;
+                        }
 
-            const response = await client.complete(userMessage, systemPrompt);
-            const { content, action } = parseAction(response.content);
-
-            setMessages(prev => [...prev, { role: 'assistant', content, action }]);
+                        canvasStore.setState({ nodes: jsonUpdate.nodes ?? [], edges: jsonUpdate.edges ?? [] });
+                        saveGraphToLocalStorage();
+                        // persist updated canvas back to Content.json
+                        saveContentToServer(jsonUpdate);
+                        setJsonText(getGraphPreviewString());
+                        toast.success({ title: 'AI updated canvas JSON (applied)'});
+                    } else {
+                        // Try import format
+                        const ok = applyImportedGraph(jsonUpdate);
+                        if (ok) {
+                            setJsonText(getGraphPreviewString());
+                            // persist imported format as well
+                            saveContentToServer(jsonUpdate);
+                            toast.success({ title: 'AI updated graph (import applied)'});
+                        } else {
+                            // If not importable, show the raw JSON in editor for user review
+                            setJsonText(JSON.stringify(jsonUpdate, null, 2));
+                            toast.info({ title: 'AI provided JSON (review in editor)'});
+                        }
+                    }
+                } catch (e) {
+                    console.error('Failed to apply AI json_update', e);
+                    toast.error({ title: 'Failed to apply AI JSON update' });
+                }
+            }
+            loader.close?.();
         } catch (error: any) {
             setMessages(prev => [...prev, { role: 'assistant', content: `Error: ${error.message}` }]);
+            toast.error({ title: 'AI request failed' });
         } finally {
             setIsTyping(false);
         }
@@ -143,53 +285,84 @@ You can only suggest ONE action at a time.`;
 
     const handleActionConfirm = (index: number) => {
         const message = messages[index];
-        if (!message || !message.action || message.action.status !== 'pending') return;
+        if (!message || !message.action) return;
 
-        const { type, data } = message.action;
+        // Execute the action(s) and mark the message as confirmed
+        executeCanvasAction(message.action, index);
+    };
 
+    // Execute an action programmatically (used to auto-apply AI suggestions)
+    const executeCanvasAction = (action: CanvasAction | CanvasAction[], markIndex?: number) => {
         try {
-            if (type === 'add_node') {
-                canvasStore.addNode({
-                    id: generateId('node_'),
-                    type: 'markdown',
-                    position: { x: 100, y: 100 },
-                    data: { ...data, status: 'Suggested' },
-                    width: 320,
-                    height: 180
-                });
-            } else if (type === 'remove_node') {
-                canvasStore.removeNode(data.id);
-            } else if (type === 'add_edge') {
-                canvasStore.addEdge({
-                    id: generateId('edge_'),
-                    source: data.source,
-                    target: data.target,
-                    label: data.label
-                });
-            } else if (type === 'remove_edge') {
-                canvasStore.removeEdge(data.id);
+            const toApply = Array.isArray(action) ? action : [action];
+            // Place new nodes to the right of existing canvas nodes and arrange horizontally
+            const existing = canvasStore.getState().nodes || [];
+            const existingRight = existing.length ? Math.max(...existing.map(n => (n.position?.x ?? 0) + (n.width ?? 320))) : 0;
+            const gap = 40;
+            const createdIds: string[] = [];
+            let nextX = existingRight + gap;
+
+            toApply.forEach(a => {
+                const { type, data } = a;
+                if (type === 'add_node') {
+                    const id = data.id || generateId('node_');
+                    const w = data.width || 320;
+                    const h = data.height || 160;
+                    const pos = { x: nextX, y: data.position?.y ?? 100 };
+                    canvasStore.addNode({ id, type: 'markdown', position: pos, width: w, height: h, data: { ...data, status: 'Suggested' } });
+                    createdIds.push(id);
+                    nextX += w + gap;
+                } else if (type === 'remove_node') {
+                    canvasStore.removeNode(data.id);
+                } else if (type === 'add_edge') {
+                    // ensure edge direction is left -> right by checking positions
+                    const source = data.source;
+                    const target = data.target;
+                    canvasStore.addEdge({ id: generateId('edge_'), source, target, label: data.label });
+                } else if (type === 'remove_edge') {
+                    canvasStore.removeEdge(data.id);
+                }
+            });
+
+            // If multiple nodes were created in this batch, connect them sequentially left->right
+            if (createdIds.length > 1) {
+                for (let i = 0; i < createdIds.length - 1; i++) {
+                    const s = createdIds[i];
+                    const t = createdIds[i + 1];
+                    canvasStore.addEdge({ id: generateId('edge_'), source: s, target: t, label: '' });
+                }
             }
 
-            const newMessages = [...messages];
-            newMessages[index] = {
-                ...message,
-                action: { ...message.action, status: 'confirmed' }
-            };
-            setMessages(newMessages);
-        } catch (e) {
-            console.error('Failed to execute action', e);
+            saveGraphToLocalStorage();
+            toast.success({ title: 'AI actions applied' });
+
+            if (typeof markIndex === 'number') {
+                const newMessages = [...messages];
+                const msg = newMessages[markIndex];
+                if (msg) {
+                    if (Array.isArray(msg.action)) {
+                        newMessages[markIndex] = { ...msg, action: msg.action.map(a => ({ ...a, status: 'confirmed' })) };
+                    } else if (msg.action) {
+                        newMessages[markIndex] = { ...msg, action: { ...(msg.action as CanvasAction), status: 'confirmed' } };
+                    }
+                    setMessages(newMessages);
+                }
+            }
+        } catch (err) {
+            console.error('executeCanvasAction error', err);
         }
     };
 
     const handleActionReject = (index: number) => {
         const message = messages[index];
-        if (!message || !message.action || message.action.status !== 'pending') return;
+        if (!message || !message.action) return;
 
         const newMessages = [...messages];
-        newMessages[index] = {
-            ...message,
-            action: { ...message.action, status: 'rejected' }
-        };
+        if (Array.isArray(message.action)) {
+            newMessages[index] = { ...message, action: message.action.map(a => ({ ...a, status: 'rejected' })) };
+        } else {
+            newMessages[index] = { ...message, action: { ...(message.action as CanvasAction), status: 'rejected' } };
+        }
         setMessages(newMessages);
     };
 
@@ -198,88 +371,180 @@ You can only suggest ONE action at a time.`;
     return (
         <div className="ai-modal-container">
             <div className="ai-modal-header">
-                <button className="history-btn">
-                    History <ChevronDown size={14} />
-                </button>
-                <button className="expand-btn">
-                    <Layout size={14} />
-                </button>
+                <div style={{ fontWeight: 600 }}>Alice Gem</div>
                 <button className="close-btn" onClick={() => uiStore.setState({ activeModal: null })}>
                     <X size={18} />
                 </button>
             </div>
 
             <div className="ai-chat-body">
-                {messages.map((msg, i) => (
-                    <div key={i} className={`chat-line ${msg.role}`}>
-                        {msg.role === 'assistant' ? (
-                            <div className="assistant-message">
-                                <div className="assistant-name">
-                                    <Sparkles size={12} fill="var(--accent-color)" stroke="var(--accent-color)" />
-                                    <span>Alice Gem</span>
-                                </div>
-                                <div className="message-bubble">
-                                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                                        {msg.content}
-                                    </ReactMarkdown>
-                                </div>
+                {/* JSON visualizer shown above the chat */}
+                <div className="json-visualizer-panel">
+                    <div className="json-visualizer-header">
+                        <strong>Canvas JSON Preview</strong>
+                        <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
+                            <button className="small-btn" onClick={() => setJsonText(getGraphPreviewString())}>Refresh</button>
+                            <button className="small-btn" onClick={() => { setActiveTab('json'); setJsonText(getGraphPreviewString()); }}>Edit JSON</button>
+                        </div>
+                    </div>
+                    <pre className="json-visualizer-pre" style={{ maxHeight: 120, overflow: 'auto', background: 'var(--surface-color)', padding: 8, borderRadius: 6, border: '1px solid var(--border-color)', marginTop: 8 }}>
+                        {jsonText}
+                    </pre>
+                </div>
+                <div className="ai-tabs">
+                    <button className={`tab-btn ${activeTab === 'chat' ? 'active' : ''}`} onClick={() => { setActiveTab('chat'); setJsonText(getGraphPreviewString()); }}>Chat</button>
+                    <button className={`tab-btn ${activeTab === 'json' ? 'active' : ''}`} onClick={() => { setActiveTab('json'); setJsonText(getGraphPreviewString()); }}>JSON</button>
+                </div>
 
-                                {msg.action && (
-                                    <div className={`action-request-card ${msg.action.status}`}>
-                                        <div className="action-header">
-                                            {msg.action.type === 'add_node' ? <Plus size={16} /> : <Trash2 size={16} />}
-                                            <span>{msg.action.type.replace('_', ' ')}</span>
-                                        </div>
-                                        <div className="action-details">
-                                            {msg.action.type === 'add_node' && (
-                                                <div className="node-preview">
-                                                    <strong>{msg.action.data.title}</strong>
-                                                    <p>{msg.action.data.content?.substring(0, 50)}...</p>
+                {activeTab === 'chat' ? (
+                    messages.map((msg, i) => (
+                        <div key={i} className={`chat-line ${msg.role}`}>
+                            {msg.role === 'assistant' ? (
+                                <div className="assistant-message">
+                                    <div className="assistant-name">
+                                        <Sparkles size={12} fill="var(--accent-color)" stroke="var(--accent-color)" />
+                                        <span>Alice Gem</span>
+                                    </div>
+                                    <div className="message-bubble">
+                                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                            {msg.content}
+                                        </ReactMarkdown>
+                                    </div>
+
+                                    {/* Support single or multiple actions */}
+                                    {msg.action && (Array.isArray(msg.action) ? (
+                                        <div className="multi-action-list">
+                                            {msg.action.map((a, idx) => (
+                                                <div key={idx} className={`action-request-card ${a.status}`}>
+                                                    <div className="action-header">
+                                                        {a.type === 'add_node' ? <Plus size={16} /> : <Trash2 size={16} />}
+                                                        <span>{a.type.replace('_', ' ')}</span>
+                                                    </div>
+                                                    <div className="action-details">
+                                                        {a.type === 'add_node' && (
+                                                            <div className="node-preview">
+                                                                <strong>{a.data.title}</strong>
+                                                                <p>{a.data.content?.substring(0, 50)}...</p>
+                                                            </div>
+                                                        )}
+                                                        {a.type === 'remove_node' && (
+                                                            <div className="node-preview">
+                                                                <span>Remove node ID: {a.data.id}</span>
+                                                            </div>
+                                                        )}
+                                                        {(a.type === 'add_edge' || a.type === 'remove_edge') && (
+                                                            <div className="edge-preview">
+                                                                <span>{a.data.source} → {a.data.target}</span>
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                 </div>
-                                            )}
-                                            {msg.action.type === 'remove_node' && (
-                                                <div className="node-preview">
-                                                    <span>Remove node ID: {msg.action.data.id}</span>
-                                                </div>
-                                            )}
-                                            {(msg.action.type === 'add_edge' || msg.action.type === 'remove_edge') && (
-                                                <div className="edge-preview">
-                                                    <span>{msg.action.data.source} → {msg.action.data.target}</span>
-                                                </div>
-                                            )}
-                                        </div>
-                                        {msg.action.status === 'pending' ? (
+                                            ))}
+
                                             <div className="action-btns">
                                                 <button className="confirm-btn" onClick={() => handleActionConfirm(i)}>
-                                                    <Check size={14} /> Confirm
+                                                    <Check size={14} /> Confirm All
                                                 </button>
                                                 <button className="reject-btn" onClick={() => handleActionReject(i)}>
-                                                    <XIcon size={14} /> Reject
+                                                    <XIcon size={14} /> Reject All
                                                 </button>
                                             </div>
-                                        ) : (
-                                            <div className="action-status-label">
-                                                {msg.action.status === 'confirmed' ? 'Action executed' : 'Action declined'}
+                                        </div>
+                                    ) : (
+                                        <div className={`action-request-card ${(msg.action as any).status}`}>
+                                            <div className="action-header">
+                                                {(msg.action as any).type === 'add_node' ? <Plus size={16} /> : <Trash2 size={16} />}
+                                                <span>{(msg.action as any).type.replace('_', ' ')}</span>
                                             </div>
-                                        )}
-                                    </div>
-                                )}
+                                            <div className="action-details">
+                                                {(msg.action as any).type === 'add_node' && (
+                                                    <div className="node-preview">
+                                                        <strong>{(msg.action as any).data.title}</strong>
+                                                        <p>{(msg.action as any).data.content?.substring(0, 50)}...</p>
+                                                    </div>
+                                                )}
+                                                {(msg.action as any).type === 'remove_node' && (
+                                                    <div className="node-preview">
+                                                        <span>Remove node ID: {(msg.action as any).data.id}</span>
+                                                    </div>
+                                                )}
+                                                {(((msg.action as any).type === 'add_edge') || ((msg.action as any).type === 'remove_edge')) && (
+                                                    <div className="edge-preview">
+                                                        <span>{(msg.action as any).data.source} → {(msg.action as any).data.target}</span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                            {(msg.action as any).status === 'pending' ? (
+                                                <div className="action-btns">
+                                                    <button className="confirm-btn" onClick={() => handleActionConfirm(i)}>
+                                                        <Check size={14} /> Confirm
+                                                    </button>
+                                                    <button className="reject-btn" onClick={() => handleActionReject(i)}>
+                                                        <XIcon size={14} /> Reject
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <div className="action-status-label">
+                                                    {(msg.action as any).status === 'confirmed' ? 'Action executed' : 'Action declined'}
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))}
 
-                                <div className="message-actions">
-                                    <button><ThumbsUp size={14} /></button>
-                                    <button><ThumbsDown size={14} /></button>
-                                    <button><RotateCcw size={14} /></button>
+                                    {/* message actions removed to simplify UI */}
                                 </div>
-                            </div>
-                        ) : (
-                            <div className="user-message">
-                                <div className="message-bubble">
-                                    {msg.content}
+                            ) : (
+                                <div className="user-message">
+                                    <div className="message-bubble">
+                                        {msg.content}
+                                    </div>
                                 </div>
-                            </div>
-                        )}
+                            )}
+                        </div>
+                    ))
+                ) : (
+                    <div className="json-editor">
+                        <textarea
+                            value={jsonText}
+                            onChange={e => {
+                                const v = e.target.value;
+                                setJsonText(v);
+                                setIsEditingJson(true);
+                                if (uiStore.getState().fastJsonSync) {
+                                    debouncedApplyJson.current(v);
+                                }
+                            }}
+                            onBlur={() => setIsEditingJson(false)}
+                        />
+                        <div className="json-editor-actions">
+                            <button onClick={() => { setJsonText(getGraphPreviewString()); setIsEditingJson(false); }}>Reload</button>
+                            <button onClick={async () => {
+                                try {
+                                    const parsed = JSON.parse(jsonText);
+                                    // If it looks like full canvas state, apply directly
+                                    if (parsed && (parsed.nodes || parsed.edges)) {
+                                        canvasStore.setState({ nodes: parsed.nodes ?? [], edges: parsed.edges ?? [] });
+                                        saveGraphToLocalStorage();
+                                        await saveContentToServer(parsed);
+                                        setJsonText(getGraphPreviewString());
+                                        toast.success({ title: 'Canvas applied and saved' });
+                                    } else {
+                                        const ok = applyImportedGraph(parsed);
+                                        if (!ok) {
+                                            toast.error({ title: 'Failed to apply JSON' });
+                                        } else {
+                                            await saveContentToServer(parsed);
+                                            toast.success({ title: 'Graph applied and saved' });
+                                        }
+                                    }
+                                } catch (e) {
+                                    toast.error({ title: 'Invalid JSON' });
+                                }
+                            }}>Apply JSON</button>
+                            <button onClick={async () => { saveGraphToLocalStorage(); toast.success({ title: 'Saved snapshot to localStorage' }); }}>Save Snapshot</button>
+                        </div>
                     </div>
-                ))}
+                )}
                 {isTyping && (
                     <div className="chat-line assistant">
                         <div className="assistant-message">
@@ -293,7 +558,7 @@ You can only suggest ONE action at a time.`;
                 <div ref={messagesEndRef} />
             </div>
 
-            <div className="ai-modal-footer">
+                <div className="ai-modal-footer">
                 <div className="input-label">Ask anything</div>
                 <div className="input-wrapper">
                     <textarea
@@ -309,12 +574,7 @@ You can only suggest ONE action at a time.`;
                         autoFocus
                     />
                     <div className="input-actions-bar">
-                        <div className="left-actions">
-                            <button><Paperclip size={14} /> Attach</button>
-                            <button><Zap size={14} /> Shortcuts</button>
-                        </div>
                         <div className="right-actions">
-                            <span className="model-info">Mistral 3.6 (beta)</span>
                             <button className="send-btn" onClick={handleSend} disabled={!input.trim() || isTyping}>
                                 <Send size={14} />
                             </button>

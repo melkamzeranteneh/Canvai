@@ -7,19 +7,24 @@ export class AIClient {
         this.config = config;
     }
 
-    async complete(prompt: string, systemPrompt?: string): Promise<AIResponse> {
+    async complete(prompt: string, systemPrompt?: string, extraSystemMessages?: string[]): Promise<AIResponse> {
         if (this.config.provider === 'openai') {
-            return this.completeOpenAI(prompt, systemPrompt);
+            return this.completeOpenAI(prompt, systemPrompt, extraSystemMessages);
         } else if (this.config.provider === 'gemini') {
-            return this.completeGemini(prompt, systemPrompt);
+            return this.completeGemini(prompt, systemPrompt, extraSystemMessages);
         } else if (this.config.provider === 'mistral') {
-            return this.completeMistral(prompt, systemPrompt);
+            return this.completeMistral(prompt, systemPrompt, extraSystemMessages);
         }
 
         throw new Error(`Provider ${this.config.provider} not supported`);
     }
 
-    private async completeMistral(prompt: string, systemPrompt?: string): Promise<AIResponse> {
+    private async completeMistral(prompt: string, systemPrompt?: string, extraSystemMessages?: string[]): Promise<AIResponse> {
+        const systemMsgs = [
+            ...(systemPrompt ? [{ role: 'system', content: systemPrompt }] : []),
+            ...(extraSystemMessages ? extraSystemMessages.map(m => ({ role: 'system', content: m })) : [])
+        ];
+
         const response = await fetch('https://api.mistral.ai/v1/chat/completions', {
             method: 'POST',
             headers: {
@@ -29,7 +34,7 @@ export class AIClient {
             body: JSON.stringify({
                 model: this.config.model,
                 messages: [
-                    ...(systemPrompt ? [{ role: 'system', content: systemPrompt }] : []),
+                    ...systemMsgs,
                     { role: 'user', content: prompt }
                 ],
                 temperature: 0.7
@@ -51,7 +56,12 @@ export class AIClient {
         };
     }
 
-    private async completeOpenAI(prompt: string, systemPrompt?: string): Promise<AIResponse> {
+    private async completeOpenAI(prompt: string, systemPrompt?: string, extraSystemMessages?: string[]): Promise<AIResponse> {
+        const systemMsgs = [
+            ...(systemPrompt ? [{ role: 'system', content: systemPrompt }] : []),
+            ...(extraSystemMessages ? extraSystemMessages.map(m => ({ role: 'system', content: m })) : [])
+        ];
+
         const response = await fetch('https://api.openai.com/v1/chat/completions', {
             method: 'POST',
             headers: {
@@ -61,7 +71,7 @@ export class AIClient {
             body: JSON.stringify({
                 model: this.config.model,
                 messages: [
-                    ...(systemPrompt ? [{ role: 'system', content: systemPrompt }] : []),
+                    ...systemMsgs,
                     { role: 'user', content: prompt }
                 ],
                 temperature: 0.7
@@ -86,8 +96,12 @@ export class AIClient {
         };
     }
 
-    private async completeGemini(prompt: string, systemPrompt?: string): Promise<AIResponse> {
-        const fullPrompt = systemPrompt ? `${systemPrompt}\n\n${prompt}` : prompt;
+    private async completeGemini(prompt: string, systemPrompt?: string, extraSystemMessages?: string[]): Promise<AIResponse> {
+        const pieces = [] as string[];
+        if (systemPrompt) pieces.push(systemPrompt);
+        if (extraSystemMessages) pieces.push(...extraSystemMessages);
+        pieces.push(prompt);
+        const fullPrompt = pieces.join('\n\n');
 
         const response = await fetch(
             `https://generativelanguage.googleapis.com/v1beta/models/${this.config.model}:generateContent?key=${this.config.apiKey}`,

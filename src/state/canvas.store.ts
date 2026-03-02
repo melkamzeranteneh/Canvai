@@ -24,8 +24,16 @@ export const canvasStore = {
     onEdgesChange: (_changes: any[]) => {
         // Handled in component
     },
-    addNode: (node: Node) => {
-        canvasStore.setState({ nodes: [...state.nodes, node] });
+    addNode: (node: Partial<Node>) => {
+        const n: Node = {
+            id: node.id || `node_${Date.now()}`,
+            type: node.type || 'markdown',
+            position: node.position || { x: 0, y: 0 },
+            data: node.data || {},
+            width: node.width ?? 320,
+            height: node.height ?? 160,
+        };
+        canvasStore.setState({ nodes: [...state.nodes, n] });
     },
     updateNode: (id: string, updates: Partial<Node>) => {
         canvasStore.setState({

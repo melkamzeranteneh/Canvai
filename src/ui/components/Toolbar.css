@@ -1,25 +1,25 @@
+/* ─── Bottom Toolbar ────────────────────────────────── */
 .toolbar {
     position: absolute;
-    top: 24px;
+    bottom: 24px;
     left: 50%;
     transform: translateX(-50%);
-    height: 52px;
-    background: transparent;
-    border: 1px solid var(--border-color);
-    border-radius: 26px;
+    height: 62px;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 32px;
     display: flex;
     align-items: center;
-    padding: 0 10px;
-    gap: 6px;
-    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    padding: 0 8px;
+    gap: 2px;
+    backdrop-filter: blur(16px);
+    box-shadow: var(--shadow-lg), 0 0 0 1px rgba(255, 255, 255, 0.7) inset;
     z-index: 100;
-    backdrop-filter: blur(12px);
-    transition: all 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.2, 0, 0, 1);
 }
 
 .toolbar:hover {
-    box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.15), 0 8px 12px -5px rgba(0, 0, 0, 0.1);
-    transform: translateX(-50%) translateY(-2px);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(255, 255, 255, 0.8) inset;
 }
 
 .toolbar-section {
@@ -29,48 +29,88 @@
 }
 
 .toolbar-btn {
-    width: 36px;
-    height: 36px;
+    width: 56px;
+    height: 50px;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    border-radius: 50%;
+    gap: 3px;
+    border-radius: 24px;
     color: var(--text-secondary);
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.2s;
     border: 1px solid transparent;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
 }
 
 .toolbar-btn:hover {
-    background-color: #f1f5f9;
+    background: var(--surface-hover);
     color: var(--text-primary);
 }
 
 .toolbar-btn.active {
-    background: var(--text-primary);
+    background: var(--accent-color);
     color: #fff;
+    box-shadow: 0 2px 10px rgba(79, 70, 229, 0.3);
 }
 
 .toolbar-divider {
     width: 1px;
-    height: 24px;
+    height: 28px;
     background: var(--border-color);
     margin: 0 4px;
+    flex-shrink: 0;
 }
 
 .ai-btn {
-    width: auto;
-    padding: 0 14px;
-    gap: 8px;
-    font-size: 13px;
-    font-weight: 600;
-    background: rgba(16,185,129,0.08);
-    border: 1px solid rgba(16,185,129,0.14);
+    width: 68px;
+    padding: 0 8px;
+    background: var(--accent-dim);
+    border: 1px solid rgba(79, 70, 229, 0.2);
     color: var(--accent-color);
-    border-radius: 20px;
+    border-radius: 24px;
+    font-size: 10px;
+    font-weight: 700;
 }
 
 .ai-btn:hover {
-    background: rgba(16,185,129,0.12);
-    border-color: rgba(16,185,129,0.2);
-    transform: none;
+    background: rgba(79, 70, 229, 0.14);
+    border-color: rgba(79, 70, 229, 0.35);
+    box-shadow: 0 2px 10px rgba(79, 70, 229, 0.2);
+    color: var(--accent-color);
 }
+
+.ai-btn.active {
+    background: var(--accent-color);
+    color: #fff;
+    border-color: transparent;
+}
+
+/* When toolbar is used inside the header/navbar, use compact inline styles */
+.app-header .toolbar {
+    position: static;
+    transform: none;
+    bottom: auto;
+    left: auto;
+    height: 40px;
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    padding: 0;
+    gap: 6px;
+    box-shadow: none;
+}
+
+.app-header .toolbar .toolbar-btn {
+    width: 40px;
+    height: 36px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0;
+}
+
+.toolbar-btn.icon-only span { display: none; }

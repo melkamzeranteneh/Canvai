@@ -2,9 +2,10 @@ interface UIState {
     selectedNodeId: string | null;
     isDragging: boolean;
     isConnecting: boolean;
-    activeModal: 'ai' | null;
+    activeModal: 'ai' | 'json' | null;
     isLoading: boolean;
     eraserMode: boolean;
+    fastJsonSync: boolean;
     connectingSourceId: string | null;
     connectionStartPos: { x: number, y: number } | null;
     connectionTargetPos: { x: number, y: number } | null;
@@ -17,6 +18,7 @@ let state: UIState = {
     activeModal: null,
     isLoading: false,
     eraserMode: false,
+    fastJsonSync: true,
     connectingSourceId: null,
     connectionStartPos: null,
     connectionTargetPos: null,

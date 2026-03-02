@@ -24,7 +24,7 @@ const nodeTypes = {
 };
 
 const edgeTypes = {
-    default: DeletableEdge,
+    smoothstep: DeletableEdge,
 };
 
 const connectionSelector = (state: any) => state.connection;
@@ -59,6 +59,38 @@ const CanvasInner = () => {
         },
         []
     );
+
+    const onDrop = useCallback((event: any) => {
+        // Detect if dropping onto an existing edge element
+        const targetEl = (event.target as HTMLElement).closest?.('.react-flow__edge');
+        const { clientX, clientY } = 'changedTouches' in event ? event.changedTouches[0] : event;
+
+        if (targetEl) {
+            // Try to extract edge id from element id or data attributes
+            const elId = (targetEl as HTMLElement).id || '';
+            let edgeId = '';
+            if (elId) edgeId = elId.replace('reactflow__edge-', '').replace('react-flow__edge-', '');
+            if (!edgeId) edgeId = targetEl.getAttribute('data-edgeid') || targetEl.getAttribute('data-id') || '';
+
+            const edge = edges.find(e => e.id === edgeId);
+            if (edge) {
+                const pos = screenToFlowPosition({ x: clientX, y: clientY });
+                const newNodeId = nanoid();
+                const newNode = {
+                    id: newNodeId,
+                    type: 'markdown',
+                    position: { x: pos.x - 160, y: pos.y - 60 },
+                    data: { title: 'Inserted Node', content: '', cardType: 'detail', category: 'Inserted' },
+                } as any;
+
+                // Replace edge by connecting source->newNode and newNode->target
+                canvasStore.removeEdge(edge.id);
+                canvasStore.addNode(newNode);
+                canvasStore.addEdge({ id: nanoid(), source: edge.source, target: newNodeId } as any);
+                canvasStore.addEdge({ id: nanoid(), source: newNodeId, target: edge.target } as any);
+            }
+        }
+    }, [edges, screenToFlowPosition]);
 
     const onConnectEnd = useCallback(
         (event: any) => {
@@ -120,19 +152,22 @@ const CanvasInner = () => {
                 onEdgeClick={onEdgeClick}
                 onNodeDragStop={onNodeDragStop}
                 onSelectionChange={onSelectionChange}
+                onDrop={onDrop}
+                onDragOver={(e) => e.preventDefault()}
+                dragHandle=".drag-handle"
                 nodeTypes={nodeTypes}
                 edgeTypes={edgeTypes as any}
                 defaultEdgeOptions={{
-                    type: 'default',
+                    type: 'smoothstep',
                     markerEnd: {
                         type: MarkerType.ArrowClosed,
-                        width: 14,
-                        height: 14,
-                        color: 'var(--accent-color)',
+                        width: 12,
+                        height: 12,
+                        color: 'rgba(0,0,0,0.20)',
                     },
                     style: {
-                        strokeWidth: 3,
-                        stroke: 'rgba(16,185,129,0.85)',
+                        strokeWidth: 1.5,
+                        stroke: 'rgba(0,0,0,0.16)',
                     },
                     animated: false,
                 }}
@@ -142,9 +177,9 @@ const CanvasInner = () => {
                 fitView
             >
                 <Background
-                    gap={25}
+                    gap={24}
                     size={1}
-                    color="rgba(0, 0, 0, 0.03)"
+                    color="rgba(0,0,0,0.07)"
                     variant={BackgroundVariant.Dots}
                 />
             </ReactFlow>

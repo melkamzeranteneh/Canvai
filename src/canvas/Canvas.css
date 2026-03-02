@@ -3,9 +3,7 @@
     height: 100%;
     position: relative;
     overflow: hidden;
-    background-color: var(--surface-color);
-    padding: 18px; /* give some breathing room around canvas */
-    border-left: 1px solid var(--border-color);
+    background: var(--bg-color);
 }
 
 .canvas-react-flow {
@@ -14,80 +12,63 @@
 }
 
 .react-flow__pane {
-    cursor: crosshair;
+    cursor: default;
 }
 
+/* Eraser cursor */
 .eraser-cursor .react-flow__pane,
 .eraser-cursor .react-flow__edge {
-    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m20 20-5-5'/%3E%3Cpath d='m7 18 5-5 5 5 2-2-5-5 5-5-2-2-5 5-5-5-2 2 5 5-5 5 2 2Z'/%3E%3C/svg%3E"), auto !important;
+    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%234f46e5' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m20 20-5-5'/%3E%3Cpath d='m7 18 5-5 5 5 2-2-5-5 5-5-2-2-5 5-5-5-2 2 5 5-5 5 2 2Z'/%3E%3C/svg%3E"), auto !important;
 }
 
+/* ─── Background ─────────────────────────────────────── */
 .react-flow__background {
     background-color: var(--bg-color);
 }
 
-.edge-delete-button {
-    width: 22px;
-    height: 22px;
-    background: #ffffff;
-    border: 1px solid var(--border-color);
-    border-radius: 50%;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--text-secondary);
-    box-shadow: var(--shadow-md);
-    transition: all 0.2s ease;
-    z-index: 10;
-}
-
-.edge-delete-button:hover {
-    transform: scale(1.1);
-    color: var(--delete-color);
-    border-color: var(--delete-color);
-}
-
-/* Polished Smooth Edges */
+/* ─── Edges ──────────────────────────────────────────── */
 .react-flow__edge-path {
-    stroke: rgba(108,117,125,0.45) !important;
+    stroke: rgba(0, 0, 0, 0.14) !important;
     stroke-width: 1.5 !important;
-    transition: all 0.3s ease;
+    transition: stroke 0.2s, stroke-width 0.2s;
 }
 
 .react-flow__edge.selected .react-flow__edge-path {
     stroke: var(--accent-color) !important;
-    stroke-width: 2.5 !important;
-}
-
-.react-flow__edge:hover .react-flow__edge-path {
-    stroke: rgba(16,185,129,0.7) !important;
     stroke-width: 2 !important;
 }
 
-.react-flow__edge-text {
-    fill: var(--text-secondary);
-    font-size: 12px;
-    font-weight: 500;
+.react-flow__edge:hover .react-flow__edge-path {
+    stroke: rgba(79, 70, 229, 0.45) !important;
+    stroke-width: 2 !important;
 }
 
-/* Edge markers (arrows) */
 .react-flow__edge .react-flow__edge-path {
     stroke-linecap: round;
     stroke-linejoin: round;
 }
 
+.react-flow__edge-text {
+    fill: var(--text-secondary);
+    font-size: 11px;
+    font-weight: 500;
+}
+
+/* ─── Controls ───────────────────────────────────────── */
 .react-flow__controls {
-    background: var(--glass-bg);
-    border: 1px solid var(--glass-border);
-    backdrop-filter: blur(10px);
+    background: var(--surface-color);
+    border: 1px solid var(--border-color);
     border-radius: var(--radius-sm);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
 }
 
 .react-flow__controls-button {
-    border-bottom: 1px solid var(--glass-border);
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid var(--border-color);
     fill: var(--text-secondary);
+    transition: all 0.15s;
 }
 
 .react-flow__controls-button:hover {
@@ -95,9 +76,61 @@
     fill: var(--accent-color);
 }
 
-.react-flow__background {
-    background-color: var(--surface-color);
-    /* subtle green-dot grid */
-    background-image: radial-gradient(rgba(16,185,129,0.03) 1px, transparent 1px);
-    background-size: 24px 24px;
+.react-flow__controls-button:last-child {
+    border-bottom: none;
+}
+
+/* ─── MiniMap ─────────────────────────────────────────── */
+.react-flow__minimap {
+    background: var(--surface-color) !important;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-sm);
+}
+
+/* ─── Edge Label Pill ─────────────────────────────────── */
+.edge-label {
+    background: var(--surface-color);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    padding: 2px 10px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    letter-spacing: 0.01em;
+    white-space: nowrap;
+    box-shadow: var(--shadow-xs);
+    pointer-events: none;
+    user-select: none;
+}
+
+/* ─── Edge Delete Button ─────────────────────────────── */
+.edge-delete-btn {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--surface-color);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: var(--shadow-sm);
+    transition: all 0.15s;
+}
+
+.edge-delete-btn:hover {
+    background: #fef2f2;
+    border-color: rgba(239, 68, 68, 0.35);
+    color: var(--delete-color);
+    transform: scale(1.15);
+}
+
+/* ─── Live Connection Line ───────────────────────────── */
+.react-flow__connection-path {
+    stroke: var(--accent-color) !important;
+    stroke-width: 1.5 !important;
+    stroke-dasharray: 5 3;
+    opacity: 0.7;
 }
