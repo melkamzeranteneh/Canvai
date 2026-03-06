@@ -8,7 +8,6 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
-          'react-vendor': ['react', 'react-dom'],
           'flow-vendor': ['@xyflow/react'],
           'markdown-vendor': ['react-markdown', 'remark-gfm'],
         }

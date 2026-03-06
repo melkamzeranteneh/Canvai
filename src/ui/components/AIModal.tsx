@@ -1,17 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Send, Sparkles, Loader2, ChevronDown, Paperclip, Zap, Layout, ThumbsUp, ThumbsDown, RotateCcw } from 'lucide-react';
+import { X, Send, Sparkles, Loader2, Paperclip, Zap } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { uiStore } from '../../state/ui.store';
 import { AIClient } from '../../ai/ai.client';
 import { getEnvConfig, getApiKey } from '../../config/env.config';
+import { buildFileContext, runLangaGraphCapabilityTest, runLangaGraphEdit } from '../../ai/langraph';
 import './AIModal.css';
 
 import { Plus, Trash2, Check, X as XIcon } from 'lucide-react';
 import { canvasStore } from '../../state/canvas.store';
 import { generateId } from '../../utils/id';
 import { saveGraphToLocalStorage, getGraphPreviewString, applyImportedGraph } from '../../notes/storage/graph';
-import { confirmToast, loadingToast, toast } from '../../utils/toast';
+import { loadingToast, toast } from '../../utils/toast';
 import { debounce } from '../../utils/debounce';
 
 interface CanvasAction {
@@ -26,6 +27,13 @@ interface Message {
     timestamp?: string;
     // support single or multiple actions
     action?: CanvasAction | CanvasAction[];
+    jsonUpdate?: any;
+}
+
+interface UploadedFileContext {
+    name: string;
+    type: string;
+    content: string;
 }
 
 export const AIModal: React.FC = () => {
@@ -42,6 +50,9 @@ export const AIModal: React.FC = () => {
     const [activeTab, setActiveTab] = useState<'chat' | 'json'>('chat');
     const [jsonText, setJsonText] = useState(() => '{\n\n}');
     const [isEditingJson, setIsEditingJson] = useState(false);
+    const [uploadedFile, setUploadedFile] = useState<UploadedFileContext | null>(null);
+    const [isRunningTest, setIsRunningTest] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
     const mounted = useRef(true);
 
     const scrollToBottom = () => {
@@ -141,6 +152,85 @@ export const AIModal: React.FC = () => {
         return result;
     };
 
+    const createAIClient = () => {
+        const envConfig = getEnvConfig();
+        const apiKey = getApiKey(envConfig.activeProvider);
+        if (!apiKey) {
+            throw new Error(`API key for ${envConfig.activeProvider} is not set in .env file.`);
+        }
+
+        return new AIClient({
+            provider: envConfig.activeProvider,
+            apiKey,
+            model: envConfig.defaultModel,
+        });
+    };
+
+    const readFileAsText = (file: File) =>
+        new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(String(reader.result || ''));
+            reader.onerror = () => reject(new Error('Failed to read file.'));
+            reader.readAsText(file);
+        });
+
+    const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+
+        try {
+            const text = await readFileAsText(file);
+            const content = text.slice(0, 12000);
+            const context: UploadedFileContext = {
+                name: file.name,
+                type: file.type,
+                content,
+            };
+
+            setUploadedFile(context);
+            setMessages(prev => [
+                ...prev,
+                {
+                    role: 'assistant',
+                    content: `Loaded file **${file.name}** (${Math.round(file.size / 1024)} KB). I will use it as context for analysis and edits.`,
+                },
+            ]);
+
+            const client = createAIClient();
+            const analysis = await client.complete(
+                `Analyze this file and provide:\n1) 5 key insights\n2) data quality risks\n3) suggested canvas structure\n\n${buildFileContext(context.name, context.type, context.content)}`,
+                'You are a concise analyst. Return markdown with short sections.'
+            );
+
+            setMessages(prev => [
+                ...prev,
+                {
+                    role: 'assistant',
+                    content: `### File Analysis: ${context.name}\n\n${analysis.content}`,
+                },
+            ]);
+        } catch (error: any) {
+            setMessages(prev => [...prev, { role: 'assistant', content: `Error loading file: ${error.message}` }]);
+        } finally {
+            event.target.value = '';
+        }
+    };
+
+    const handleRunCapabilityTest = async () => {
+        if (isTyping || isRunningTest) return;
+        setIsRunningTest(true);
+
+        try {
+            const client = createAIClient();
+            const report = await runLangaGraphCapabilityTest(client, JSON.stringify(canvasStore.getState()));
+            setMessages(prev => [...prev, { role: 'assistant', content: `### Langraph Test Report\n\n${report}` }]);
+        } catch (error: any) {
+            setMessages(prev => [...prev, { role: 'assistant', content: `Capability test failed: ${error.message}` }]);
+        } finally {
+            setIsRunningTest(false);
+        }
+    };
+
     // debounced apply for fast JSON sync
     const debouncedApplyJson = useRef(debounce((text: string) => {
         try {
@@ -168,18 +258,7 @@ export const AIModal: React.FC = () => {
         setIsTyping(true);
 
         try {
-            const envConfig = getEnvConfig();
-            const apiKey = getApiKey(envConfig.activeProvider);
-
-            if (!apiKey) {
-                throw new Error(`API key for ${envConfig.activeProvider} is not set in .env file.`);
-            }
-
-            const client = new AIClient({
-                provider: envConfig.activeProvider,
-                apiKey: apiKey,
-                model: envConfig.defaultModel
-            });
+            const client = createAIClient();
 
             // Prefer the disk-backed Content.json if available so AI and editor operate on same source of truth
             let fullCanvasJson: string | null = null;
@@ -190,35 +269,16 @@ export const AIModal: React.FC = () => {
                 // ignore network error and fall back
             }
 
-            const systemPrompt = `You are Alice Gem, an automated editing agent for the canvas. ONLY respond with a single <json_update>...</json_update> block containing valid JSON (no explanatory text, no markdown, no extra tags).
-
-The JSON inside <json_update> must be either:
-1) A full canvas state object with top-level keys "nodes" and "edges" OR
-2) The import-format object accepted by the application (index-based nodes with connectedTo lists).
-
-Rules:
-- Do not include any other text or tags outside the <json_update> block.
-- Ensure the JSON is valid and parsable.
-- If you intend to modify nodes/edges, provide the full resulting "nodes" and "edges" arrays when possible.
-
-Example response (full canvas state):
-<json_update>
-{
-    "nodes": [ { "id": "node_1", "type": "markdown", "position": { "x": 0, "y": 0 }, "data": { "title": "Hello" } } ],
-    "edges": [ { "id": "edge_1", "source": "node_1", "target": "node_2" } ]
-}
-</json_update>
-
-You will receive the current canvas JSON as a separate system message marked between <<<CANVAS_JSON_START>>> and <<<CANVAS_JSON_END>>>. Use that to inform edits. Do not reference the surrounding markers in your output.`; 
-
             const loader = loadingToast('Alice is thinking...');
             if (!fullCanvasJson) fullCanvasJson = JSON.stringify(canvasStore.getState());
-            const canvasJsonMessage = `<<<CANVAS_JSON_START>>>\n${fullCanvasJson}\n<<<CANVAS_JSON_END>>>`;
-            const response = await client.complete(userMessage, systemPrompt, [canvasJsonMessage]);
+            const fileContext = uploadedFile
+                ? buildFileContext(uploadedFile.name, uploadedFile.type, uploadedFile.content)
+                : undefined;
+            const response = await runLangaGraphEdit(client, userMessage, fullCanvasJson, fileContext);
             const { content, action, jsonUpdate } = parseAction(response.content);
 
             setMessages(prev => {
-                const next = [...prev, { role: 'assistant', content, action, jsonUpdate }];
+                const next: Message[] = [...prev, { role: 'assistant', content, action, jsonUpdate }];
                 return next;
             });
 
@@ -574,6 +634,33 @@ You will receive the current canvas JSON as a separate system message marked bet
                         autoFocus
                     />
                     <div className="input-actions-bar">
+                        <div className="left-actions">
+                            <input
+                                ref={fileInputRef}
+                                type="file"
+                                onChange={handleFileUpload}
+                                style={{ display: 'none' }}
+                                accept=".txt,.md,.json,.csv,.ts,.tsx,.js,.jsx,.py,.log"
+                            />
+                            <button
+                                type="button"
+                                onClick={() => fileInputRef.current?.click()}
+                                disabled={isTyping || isRunningTest}
+                                title="Upload file for analysis"
+                            >
+                                <Paperclip size={13} />
+                                <span>{uploadedFile ? uploadedFile.name : 'Upload'}</span>
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleRunCapabilityTest}
+                                disabled={isTyping || isRunningTest}
+                                title="Run Langraph capability test"
+                            >
+                                <Zap size={13} />
+                                <span>{isRunningTest ? 'Testing...' : 'Test AI'}</span>
+                            </button>
+                        </div>
                         <div className="right-actions">
                             <button className="send-btn" onClick={handleSend} disabled={!input.trim() || isTyping}>
                                 <Send size={14} />

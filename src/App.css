@@ -27,15 +27,26 @@
 }
 
 .logo-wrapper {
-    width: 30px;
-    height: 30px;
-    background: var(--accent-color);
+    width: 34px;
+    height: 34px;
     border-radius: var(--radius-sm);
     display: flex;
     align-items: center;
     justify-content: center;
-    color: white;
     flex-shrink: 0;
+    overflow: hidden;
+    background: #fff;
+    border: 1px solid var(--border-color);
+}
+
+.brand-logo {
+    display: block;
+    object-fit: contain;
+}
+
+.brand-logo.flat {
+    width: 24px;
+    height: 24px;
 }
 
 .project-info {
@@ -146,7 +157,36 @@
     flex-shrink: 0;
 }
 
+.status-right {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.brand-logo.three-d {
+    width: 16px;
+    height: 16px;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.18));
+}
+
 .accent-text {
     color: var(--accent-color);
     font-weight: 600;
+}
+
+@media (max-width: 720px) {
+    .logo-wrapper {
+        width: 30px;
+        height: 30px;
+    }
+
+    .brand-logo.flat {
+        width: 20px;
+        height: 20px;
+    }
+
+    .brand-logo.three-d {
+        width: 14px;
+        height: 14px;
+    }
 }

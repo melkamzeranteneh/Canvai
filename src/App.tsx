@@ -4,11 +4,10 @@ import { Toolbar } from './ui/components/Toolbar';
 import { canvasStore } from './state/canvas.store';
 import { uiStore } from './state/ui.store';
 import { generateId } from './utils/id';
-import { Sparkles } from 'lucide-react';
 import './App.css';
 
 import { AIModal } from './ui/components/AIModal';
-import { MousePointer2, Eraser } from 'lucide-react';
+import  {MousePointer2, Eraser} from 'lucide-react';
 
 import { ReactFlowProvider } from '@xyflow/react';
 
@@ -93,7 +92,7 @@ const App: React.FC = () => {
         <header className="app-header">
           <div className="header-left">
             <div className="logo-wrapper">
-              <Sparkles size={18} />
+              <img src="/logo.png" alt="Canvai logo" className="brand-logo flat" />
             </div>
             <div className="project-info">
               <div className="project-title">Vinefordge</div>
@@ -121,7 +120,10 @@ const App: React.FC = () => {
           </div>
         <div className="status-bar">
           <span>Vinefordge v1.0.0</span>
-          <span className="accent-text">Connected to Mistral AI</span>
+          <span className="status-right">
+            <img src="/3d_logo.png" alt="Canvai 3D logo" className="brand-logo three-d" />
+            <span className="accent-text">Connected to Mistral AI</span>
+          </span>
         </div>
       </div>
     </ReactFlowProvider>

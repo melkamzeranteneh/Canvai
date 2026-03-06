@@ -247,9 +247,21 @@
     transition: all 0.15s;
 }
 
+.left-actions button span {
+    max-width: 110px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 .left-actions button:hover {
     background: var(--surface-hover);
     color: var(--text-secondary);
+}
+
+.left-actions button:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
 }
 
 .model-info {

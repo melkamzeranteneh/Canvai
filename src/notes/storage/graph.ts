@@ -68,6 +68,21 @@ export function loadGraphFromLocalStorage(key = 'canvai_graph_json') {
     }
 }
 
+type ImportedGraphNode = {
+    id?: string;
+    title?: string;
+    content?: string;
+    badge?: string;
+    category?: string;
+    cardType?: 'ai' | 'main' | 'detail';
+    connectedTo?: unknown;
+};
+
+function asImportedGraphNode(value: unknown): ImportedGraphNode {
+    if (!value || typeof value !== 'object') return {};
+    return value as ImportedGraphNode;
+}
+
 /**
  * Convert the exported JSON format back into canvas nodes & edges.
  * Expected format: {
@@ -78,14 +93,16 @@ export function loadGraphFromLocalStorage(key = 'canvai_graph_json') {
 export function importGraphJson(obj: any): { nodes: CanvasNode[]; edges: CanvasEdge[] } {
     if (!obj || typeof obj !== 'object') return { nodes: [], edges: [] };
 
-    const entries = Object.entries(obj).sort((a, b) => Number(a[0]) - Number(b[0]));
+    const entries = Object.entries(obj)
+        .map(([key, val]) => [key, asImportedGraphNode(val)] as const)
+        .sort((a, b) => Number(a[0]) - Number(b[0]));
     const indexToId: Record<string, string> = {};
     const nodes: CanvasNode[] = [];
     const edges: CanvasEdge[] = [];
 
     // create nodes
     entries.forEach(([key, val], i) => {
-        const nodeId = val && val.id ? String(val.id) : generateId('node_');
+        const nodeId = val.id ? String(val.id) : generateId('node_');
         indexToId[key] = nodeId;
         const col = i % 4;
         const row = Math.floor(i / 4);
@@ -107,7 +124,7 @@ export function importGraphJson(obj: any): { nodes: CanvasNode[]; edges: CanvasE
 
     // create edges from connectedTo lists
     entries.forEach(([key, val]) => {
-        if (!val || !Array.isArray(val.connectedTo)) return;
+        if (!Array.isArray(val.connectedTo)) return;
         const fromId = indexToId[key];
         val.connectedTo.forEach((toIdx: number) => {
             const toKey = String(toIdx);

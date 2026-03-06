@@ -154,7 +154,6 @@ const CanvasInner = () => {
                 onSelectionChange={onSelectionChange}
                 onDrop={onDrop}
                 onDragOver={(e) => e.preventDefault()}
-                dragHandle=".drag-handle"
                 nodeTypes={nodeTypes}
                 edgeTypes={edgeTypes as any}
                 defaultEdgeOptions={{

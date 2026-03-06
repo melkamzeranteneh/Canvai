@@ -1,18 +1,16 @@
-import { Handle, Position, type NodeProps, useReactFlow } from '@xyflow/react';
+import { Handle, Position, type NodeProps } from '@xyflow/react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { AIClient } from '../../ai/ai.client';
 import { summarizeNoteAgent } from '../../ai/agents';
 import {
     Sparkles, Loader2, Trash2,
-    FileText, User, MoreHorizontal, Plus,
-    GripVertical,
+    FileText, User,
 } from 'lucide-react';
 import { canvasStore } from '../../state/canvas.store';
-import { toast } from '../../utils/toast';
+import { confirmToast, toast } from '../../utils/toast';
 import { getEnvConfig, getApiKey } from '../../config/env.config';
 import { useState, useEffect, useCallback } from 'react';
-import { generateId } from '../../utils/id';
 import './Node.css';
 
 /* ─── Types ────────────────────────────────────────────── */
@@ -24,8 +22,6 @@ interface NodeData extends Record<string, unknown> {
     cardType?: 'ai' | 'main' | 'detail';
 }
 
-type Side = 'top' | 'right' | 'bottom' | 'left';
-
 /* ─── Icon helper ───────────────────────────────────────── */
 const CardIcon = ({ type }: { type?: string }) => {
     if (type === 'ai') return <Sparkles size={13} />;
@@ -36,7 +32,6 @@ const CardIcon = ({ type }: { type?: string }) => {
 /* ─── Component ─────────────────────────────────────────── */
 export const MarkdownNode = ({ data, id, selected }: NodeProps) => {
     const nd = data as NodeData;
-    const { getNode } = useReactFlow();
 
     const [isEditing, setIsEditing] = useState(false);
     const [content, setContent] = useState(nd.content ?? '');
@@ -48,8 +43,6 @@ export const MarkdownNode = ({ data, id, selected }: NodeProps) => {
     /* ── Handlers ─────────────────────────────────────── */
     const handleDelete = useCallback(async (e: React.MouseEvent) => {
         e.stopPropagation();
-        // use confirm toast instead of browser confirm
-        const { confirmToast } = await import('../../utils/toast');
         const ok = await confirmToast('Delete this card?', 'Delete', 'Cancel');
         if (ok) canvasStore.removeNode(id);
     }, [id]);
