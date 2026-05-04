@@ -2,15 +2,20 @@
 .toolbar {
     display: flex;
     align-items: center;
-    background: var(--surface-elevated);
+    background: var(--surface-color);
     border: 1px solid var(--border-color);
-    border-radius: 14px;
+    border-radius: 28px; /* Google's pill shape */
     padding: 6px;
-    gap: 6px;
+    gap: 4px;
     width: 100%;
     justify-content: center;
     margin: 0;
-    box-shadow: var(--shadow-xs);
+    box-shadow: none;
+    transition: box-shadow 0.2s;
+}
+
+.toolbar:hover {
+    box-shadow: 0 1px 2px 0 rgba(60,64,67,.302), 0 1px 3px 1px rgba(60,64,67,.149);
 }
 
 .toolbar-section {
@@ -20,52 +25,52 @@
 }
 
 .toolbar-btn {
-    height: 34px;
-    min-width: 34px;
-    padding: 0 10px;
+    height: 40px;
+    min-width: 40px;
+    padding: 0 12px;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 6px;
-    border-radius: var(--radius-sm);
+    gap: 8px;
+    border-radius: 20px;
     color: var(--text-secondary);
     transition: all 0.2s;
-    font-size: 11px;
+    font-size: 13px;
     font-weight: 500;
     border: 1px solid transparent;
 }
 
 .toolbar-btn:hover {
     background: var(--surface-hover);
-    border-color: var(--border-color);
     color: var(--text-primary);
 }
 
 .toolbar-btn.active {
     background: var(--accent-dim);
-    color: var(--accent-color);
-    border: 1px solid var(--accent-border);
+    color: var(--google-blue);
 }
 
 .toolbar-divider {
     width: 1px;
-    height: 16px;
+    height: 20px;
     background: var(--border-color);
-    margin: 0 4px;
+    margin: 0 8px;
 }
 
 .ai-btn {
-    background: var(--accent-dim);
-    color: var(--accent-color);
+    color: var(--google-blue);
+    background: var(--surface-color);
+    border: 1px solid var(--border-color);
 }
 
 .ai-btn:hover {
-    background: var(--accent-glow);
+    background: var(--surface-hover);
+    box-shadow: 0 1px 2px 0 rgba(60,64,67,.302), 0 1px 3px 1px rgba(60,64,67,.149);
 }
 
 .ai-btn.active {
-    background: var(--accent-color);
-    color: #ffffff;
+    background: var(--accent-dim);
+    border-color: transparent;
 }
 
 @media (max-width: 700px) {

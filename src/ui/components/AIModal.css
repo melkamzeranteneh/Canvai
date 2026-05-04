@@ -9,80 +9,37 @@
 
 /* ─── Header (Internal) ──────────────────────────────── */
 .ai-modal-header {
-    height: 38px;
-    padding: 0 10px;
+    height: 48px;
+    padding: 0 16px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    border-bottom: 1px solid var(--border-subtle);
-    background: transparent;
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--surface-color);
+    font-size: 14px;
+    font-weight: 500;
     color: var(--text-secondary);
 }
 
 .ai-modal-header .close-btn {
     display: none;
-    /* Hidden in embedded modular mode */
-}
-
-.history-btn {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 5px 12px;
-    background: var(--surface-hover);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-sm);
-    font-size: 12px;
-    font-weight: 500;
-    color: var(--text-secondary);
-    transition: all 0.15s;
-}
-
-.history-btn:hover {
-    background: #ebebf0;
-    color: var(--text-primary);
-}
-
-.expand-btn,
-.close-btn {
-    width: 28px;
-    height: 28px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: var(--radius-sm);
-    color: var(--text-muted);
-    transition: all 0.15s;
-}
-
-.expand-btn {
-    margin-left: auto;
-}
-
-.expand-btn:hover,
-.close-btn:hover {
-    background: var(--surface-hover);
-    color: var(--text-primary);
 }
 
 /* ─── Chat Body ─────────────────────────────────────── */
 .ai-chat-body {
     flex: 1;
     overflow-y: auto;
-    padding: 0;
+    padding: 16px;
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    background: transparent;
+    gap: 16px;
+    background: var(--bg-color);
 }
 
 .chat-line {
     display: flex;
     width: 100%;
+    margin-bottom: 12px;
 }
 
 .chat-line.user {
@@ -91,233 +48,102 @@
 
 /* User bubble */
 .user-message .message-bubble {
-    background: var(--surface-elevated);
-    border: 1px solid var(--border-color);
-    color: var(--text-primary);
-    padding: 10px 12px;
-    border-radius: 12px;
-    font-size: 12px;
-    max-width: 90%;
+    background: #e8f0fe;
+    color: #1a73e8;
+    padding: 12px 16px;
+    border-radius: 18px 18px 4px 18px;
+    font-size: 14px;
+    max-width: 85%;
     line-height: 1.5;
-    box-shadow: var(--shadow-xs);
+}
+
+[data-theme='dark'] .user-message .message-bubble {
+    background: #174ea6;
+    color: #e8f0fe;
 }
 
 /* Assistant */
 .assistant-message {
     display: flex;
     flex-direction: column;
-    gap: 6px;
-    max-width: 100%;
+    gap: 8px;
+    max-width: 90%;
 }
 
 .assistant-name {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 10px;
-    font-weight: 700;
-    color: var(--accent-color);
-    text-transform: uppercase;
+    display: none; /* Google style is more fluid */
 }
 
 .assistant-message .message-bubble {
-    font-size: 12px;
-    line-height: 1.58;
-    color: var(--text-secondary);
-}
-
-.assistant-message .message-bubble p {
-    margin-bottom: 10px;
-}
-
-.assistant-message .message-bubble p:last-child {
-    margin-bottom: 0;
-}
-
-.assistant-message .message-bubble ul,
-.assistant-message .message-bubble ol {
-    margin-left: 18px;
-    margin-bottom: 10px;
-}
-
-.assistant-message .message-bubble li {
-    margin-bottom: 3px;
-}
-
-.assistant-message .message-bubble code {
-    background: var(--surface-elevated);
-    border: 1px solid var(--border-subtle);
-    border-radius: 3px;
-    padding: 1px 5px;
-    font-size: 11px;
-    font-family: var(--font-mono);
-    color: var(--accent-color);
-}
-
-.assistant-message .message-bubble strong {
-    color: var(--text-primary);
-    font-weight: 600;
-}
-
-.message-actions {
-    display: flex;
-    gap: 8px;
-    margin-top: 2px;
-}
-
-.message-actions button {
-    color: var(--text-muted);
-    transition: color 0.15s;
-    padding: 2px;
-    border-radius: 4px;
-}
-
-.message-actions button:hover {
-    color: var(--accent-color);
-}
-
-/* ─── Input & Tabs ──────────────────────────────────── */
-.ai-tabs {
-    display: flex;
-    gap: 2px;
-    padding: 4px;
-    background: var(--surface-hover);
-    border-radius: var(--radius-sm);
-    margin-bottom: 12px;
-}
-
-.tab-btn {
-    flex: 1;
-    padding: 6px;
-    font-size: 11px;
-    font-weight: 600;
-    border-radius: var(--radius-xs);
-    color: var(--text-muted);
-}
-
-.tab-btn.active {
     background: var(--surface-color);
+    border: 1px solid var(--border-color);
+    padding: 12px 16px;
+    border-radius: 18px 18px 18px 4px;
+    font-size: 14px;
+    line-height: 1.5;
     color: var(--text-primary);
-    box-shadow: var(--shadow-xs);
+    box-shadow: 0 1px 2px 0 rgba(60,64,67,.3), 0 1px 3px 1px rgba(60,64,67,.15);
 }
 
+/* ─── Input ──────────────────────────────────── */
 .ai-modal-footer {
-    padding: 10px;
-    background: transparent;
-    border-top: 1px solid var(--border-subtle);
+    padding: 16px;
+    background: var(--surface-color);
+    border-top: 1px solid var(--border-color);
 }
 
 .input-label {
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--accent-color);
-    margin-bottom: 8px;
+    display: none;
 }
 
 .input-wrapper {
-    background: var(--surface-elevated);
+    background: var(--surface-color);
     border: 1px solid var(--border-color);
-    border-radius: 12px;
-    box-shadow: var(--shadow-xs);
+    border-radius: 24px;
+    overflow: hidden;
+    transition: box-shadow 0.2s;
 }
 
 .input-wrapper:focus-within {
-    border-color: var(--accent-border);
-    box-shadow: 0 0 0 3px var(--accent-dim);
+    box-shadow: 0 1px 2px 0 rgba(60,64,67,.302), 0 1px 3px 1px rgba(60,64,67,.149);
+    border-color: transparent;
 }
 
 .input-wrapper textarea {
     width: 100%;
-    min-height: 72px;
-    padding: 11px 14px;
+    min-height: 48px;
+    padding: 12px 20px;
     border: none;
     resize: none;
     outline: none;
     font-family: inherit;
-    font-size: 12.5px;
+    font-size: 14px;
     color: var(--text-primary);
     background: transparent;
-    line-height: 1.55;
-}
-
-.input-wrapper textarea::placeholder {
-    color: var(--text-muted);
 }
 
 .input-actions-bar {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 6px 10px;
-    border-top: 1px solid var(--border-subtle);
-}
-
-.left-actions,
-.right-actions {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.left-actions button {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    font-size: 11px;
-    font-weight: 500;
-    color: var(--text-muted);
-    padding: 4px 8px;
-    border-radius: var(--radius-sm);
-    transition: all 0.15s;
-}
-
-.left-actions button span {
-    max-width: 110px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.left-actions button:hover {
-    background: var(--surface-hover);
-    color: var(--text-primary);
-}
-
-.left-actions button:disabled {
-    opacity: 0.55;
-    cursor: not-allowed;
-}
-
-.model-info {
-    font-size: 10.5px;
-    color: var(--text-muted);
-    font-weight: 500;
+    padding: 4px 12px 12px;
 }
 
 .send-btn {
-    width: 28px;
-    height: 28px;
+    width: 36px;
+    height: 36px;
+    background: var(--google-blue);
+    color: white;
+    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--surface-hover);
-    color: var(--text-muted);
-    border-radius: 50%;
-    transition: all 0.15s;
-    border: 1px solid transparent;
-}
-
-.send-btn:not(:disabled) {
-    background: var(--accent-color);
-    color: #ffffff;
-    box-shadow: 0 2px 10px var(--accent-glow);
+    transition: transform 0.2s;
 }
 
 .send-btn:hover:not(:disabled) {
-    transform: scale(1.08);
-    box-shadow: 0 4px 14px var(--accent-glow);
+    transform: scale(1.1);
+    box-shadow: 0 1px 2px 0 rgba(60,64,67,.302), 0 1px 3px 1px rgba(60,64,67,.149);
 }
 
 /* ─── Action Request Cards ──────────────────────────── */

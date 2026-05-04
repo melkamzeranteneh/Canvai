@@ -1,609 +1,224 @@
 /* ═══════════════════════════════════════════════════════
-   PREMIUM CARD  —  clean Google-style white card
+   GOOGLE CARD — Material/Keep themed node
 ═══════════════════════════════════════════════════════ */
 
-/* ─── Base ─────────────────────────────────────────── */
-.node.premium-card {
+.node.google-card {
     background: var(--surface-color);
     border: 1px solid var(--border-color);
-    border-radius: 40px;
-    /* Play Store style */
-    box-shadow: var(--shadow-md);
+    border-radius: var(--radius-md);
+    box-shadow: none;
     display: flex;
     flex-direction: column;
-    position: relative;
+    width: 320px;
+    min-height: 120px;
     height: auto !important;
-    width: 340px;
-    min-height: 200px;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    /* overflow visible for handles */
-    padding: 24px;
-}
-
-.card-play-background {
-    position: absolute;
-    inset: 0;
-    border-radius: 40px;
-    overflow: hidden;
-    z-index: -1;
-    pointer-events: none;
-}
-
-.node.premium-card:hover {
-    box-shadow: var(--shadow-lg);
-    border-color: var(--border-active);
-}
-
-.node.premium-card.selected {
-    border-color: var(--accent-color);
-    box-shadow: 0 0 0 2px var(--accent-glow), var(--shadow-lg);
-}
-
-/* ─── Decorative Blobs ──────────────────────────────── */
-.card-blob {
-    position: absolute;
-    width: 140px;
-    height: 140px;
-    border-radius: 50%;
-    filter: blur(40px);
-    opacity: 0.15;
-    z-index: 0;
-    pointer-events: none;
-}
-
-.blob-top {
-    top: -40px;
-    right: -40px;
-}
-
-.blob-bottom {
-    bottom: -60px;
-    left: -40px;
-    width: 180px;
-    height: 180px;
-}
-
-.node.premium-card.ai .blob-top {
-    background: #a78bfa;
-}
-
-.node.premium-card.ai .blob-bottom {
-    background: #7c3aed;
-}
-
-.node.premium-card.main .blob-top {
-    background: var(--accent-color);
-}
-
-.node.premium-card.main .blob-bottom {
-    background: var(--accent-hover);
-}
-
-.node.premium-card.detail .blob-top {
-    background: #f87171;
-}
-
-.node.premium-card.detail .blob-bottom {
-    background: #ef4444;
-}
-
-/* ─── Header ────────────────────────────────────────── */
-.card-play-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 24px;
+    transition: box-shadow 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+    padding: 0;
     position: relative;
-    z-index: 10;
+    overflow: visible;
 }
 
-.card-play-icon {
-    width: 64px;
-    height: 64px;
-    border-radius: 18px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: var(--shadow-sm);
+.node.google-card:hover {
+    box-shadow: 0 1px 2px 0 rgba(60,64,67,.302), 0 1px 3px 1px rgba(60,64,67,.149);
+    border-color: transparent;
 }
 
-.node.premium-card.ai .card-play-icon {
-    background: rgba(124, 58, 237, 0.1);
-    color: #a78bfa;
-}
-
-.node.premium-card.main .card-play-icon {
-    background: var(--accent-dim);
-    color: var(--accent-color);
-}
-
-.node.premium-card.detail .card-play-icon {
-    background: rgba(239, 68, 68, 0.1);
-    color: #f87171;
-}
-
-.card-play-badge {
-    background: var(--success-color);
-    color: #fff;
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 11px;
-    font-weight: 700;
+.node.google-card.selected {
+    border-color: var(--google-blue);
+    box-shadow: 0 1px 2px 0 rgba(60,64,67,.3), 0 4px 8px 3px rgba(60,64,67,.15);
 }
 
 /* ─── Header ────────────────────────────────────────── */
 .card-header {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 12px 12px 8px;
+    justify-content: space-between;
+    padding: 12px 16px 4px;
 }
 
-/* Drag handle used to move the node when dragging */
-.drag-handle {
-    width: 20px;
-    height: 20px;
+.card-type-icon {
+    color: var(--google-gray);
     display: flex;
     align-items: center;
-    justify-content: center;
-    color: var(--text-muted);
-    cursor: grab;
-    flex-shrink: 0;
 }
 
-.drag-handle:hover {
-    color: var(--text-secondary);
-}
-
-.card-icon {
-    width: 28px;
-    height: 28px;
-    border-radius: var(--radius-sm);
+.header-actions {
     display: flex;
     align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-}
-
-.node.premium-card.default .card-icon {
-    background: var(--surface-hover);
-    color: var(--text-muted);
-}
-
-.node.premium-card.ai .card-icon {
-    background: rgba(124, 58, 237, 0.15);
-    color: #a78bfa;
-}
-
-.node.premium-card.main .card-icon {
-    background: var(--accent-dim);
-    color: var(--accent-color);
-}
-
-.node.premium-card.detail .card-icon {
-    background: rgba(239, 68, 68, 0.15);
-    color: #f87171;
-}
-
-/* ─── Body Typography ───────────────────────────────── */
-.card-play-body {
-    flex: 1;
-    position: relative;
-    z-index: 10;
-    margin-bottom: 24px;
-}
-
-.card-play-category {
-    font-size: 14px;
-    color: var(--text-muted);
-    font-weight: 500;
-    margin-bottom: 4px;
-}
-
-.card-play-title {
-    font-size: 28px;
-    font-weight: 800;
-    color: var(--text-primary);
-    line-height: 1.1;
-    margin-bottom: 12px;
-}
-
-.card-play-content {
-    font-size: 14px;
-    line-height: 1.6;
-    color: var(--text-secondary);
+    gap: 8px;
 }
 
 .card-badge {
-    font-size: 10px;
-    font-weight: 600;
-    padding: 2px 8px;
-    border-radius: 20px;
-    flex-shrink: 0;
-    letter-spacing: 0.02em;
-}
-
-.node.premium-card.ai .card-badge {
-    background: rgba(124, 58, 237, 0.2);
-    color: #a78bfa;
-}
-
-.node.premium-card.main .card-badge {
-    background: var(--accent-dim);
-    color: var(--accent-color);
-}
-
-.node.premium-card.detail .card-badge {
-    background: rgba(239, 68, 68, 0.2);
-    color: #f87171;
-}
-
-.node.premium-card.default .card-badge {
+    font-size: 11px;
+    font-weight: 500;
     background: var(--surface-hover);
-    color: var(--text-muted);
+    color: var(--text-secondary);
+    padding: 2px 8px;
+    border-radius: 4px;
 }
 
-.card-menu {
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+.card-del-btn {
     color: var(--text-muted);
     opacity: 0;
-    transition: opacity 0.15s, background 0.15s;
-    flex-shrink: 0;
+    transition: opacity 0.2s, color 0.2s;
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
 }
 
-.node.premium-card:hover .card-menu {
+.node.google-card:hover .card-del-btn {
     opacity: 1;
 }
 
-.card-menu:hover {
-    background: var(--surface-hover);
-    color: var(--text-secondary);
+.card-del-btn:hover {
+    color: var(--google-red);
 }
 
-/* ─── Stats Footer ──────────────────────────────────── */
-.card-play-stats {
-    display: flex;
-    justify-content: space-between;
-    padding-top: 16px;
-    border-top: 1px solid var(--border-subtle);
-    position: relative;
-    z-index: 10;
+/* ─── Body ──────────────────────────────────────────── */
+.card-body {
+    padding: 4px 16px 16px;
+    flex: 1;
 }
 
-.stat-item {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-}
-
-.stat-label {
+.card-category {
     font-size: 11px;
-    color: var(--text-muted);
-    font-weight: 600;
     text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+    font-weight: 600;
 }
 
-.stat-value {
-    font-size: 14px;
+.card-title {
+    font-size: 18px;
+    font-weight: 500;
     color: var(--text-primary);
-    font-weight: 700;
+    margin: 0 0 8px;
+    font-family: 'Open Sans', sans-serif;
 }
 
-.card-play-action {
-    position: absolute;
-    bottom: 24px;
-    right: 24px;
-}
-
-.play-action-btn {
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    background: var(--accent-color);
-    color: #fff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 4px 12px var(--accent-glow);
-    transition: transform 0.2s;
-}
-
-.play-action-btn:hover {
-    transform: scale(1.1);
-}
-
-/* Markdown preview */
-.card-preview {
-    font-size: 12.5px;
+.card-content {
+    font-size: 14px;
+    line-height: 1.5;
     color: var(--text-secondary);
-    line-height: 1.6;
 }
 
-.card-preview p {
-    margin-bottom: 5px;
+.card-content p {
+    margin-bottom: 8px;
 }
 
-.card-preview p:last-child {
+.card-content p:last-child {
     margin-bottom: 0;
 }
 
-.card-preview ul,
-.card-preview ol {
-    margin-left: 14px;
-    margin-bottom: 5px;
-}
-
-.card-preview li {
-    margin-bottom: 1px;
-}
-
-.card-preview code {
-    background: var(--surface-hover);
-    border-radius: 3px;
-    padding: 1px 5px;
-    font-size: 11px;
-    color: var(--accent-color);
-}
-
-.card-preview strong {
-    color: var(--text-primary);
-    font-weight: 600;
-}
-
-.card-preview em {
-    color: var(--text-muted);
-}
-
-.card-preview blockquote {
-    border-left: 2px solid var(--accent-color);
-    padding-left: 8px;
-    margin: 4px 0;
-    color: var(--text-muted);
-    font-style: italic;
-}
-
-/* Hint text */
 .card-hint {
-    font-size: 11.5px;
     color: var(--text-muted);
     font-style: italic;
 }
 
-/* Edit inputs */
+/* ─── AI Action (FAB style) ───────────────────────── */
+.card-ai-action {
+    position: absolute;
+    bottom: -18px;
+    right: 16px;
+    z-index: 20;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.2s, transform 0.2s;
+}
+
+.node.google-card:hover .card-ai-action,
+.node.google-card.selected .card-ai-action {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.ai-fab {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px; /* Modern Material 3 look */
+    background: var(--surface-color);
+    border: 1px solid var(--border-color);
+    color: var(--google-blue);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 1px 2px 0 rgba(60,64,67,.3), 0 1px 3px 1px rgba(60,64,67,.15);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.ai-fab:hover {
+    background: var(--accent-dim);
+    box-shadow: 0 1px 3px 0 rgba(60,64,67,.3), 0 4px 8px 3px rgba(60,64,67,.15);
+}
+
+.ai-fab.working {
+    color: var(--google-yellow);
+}
+
+/* ─── Edits ─────────────────────────────────────────── */
 .card-edit-title {
     width: 100%;
-    font-size: 13px;
-    font-weight: 600;
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-sm);
-    padding: 5px 8px;
+    font-size: 18px;
+    font-weight: 500;
+    border: none;
     outline: none;
     color: var(--text-primary);
-    background: var(--surface-hover);
+    background: transparent;
     font-family: inherit;
-    margin-bottom: 6px;
-    letter-spacing: -0.01em;
-    transition: border-color 0.15s;
-}
-
-.card-edit-title:focus {
-    border-color: var(--accent-color);
-    background: #fff;
+    margin-bottom: 8px;
 }
 
 .card-edit-body {
     width: 100%;
-    min-height: 72px;
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-sm);
-    padding: 7px 10px;
-    font-size: 12.5px;
+    min-height: 80px;
+    border: none;
     outline: none;
+    font-size: 14px;
     resize: none;
     font-family: inherit;
     color: var(--text-secondary);
-    background: var(--surface-hover);
-    line-height: 1.6;
-    transition: border-color 0.15s;
+    background: transparent;
+    line-height: 1.5;
 }
 
-.card-edit-body:focus {
-    border-color: var(--accent-color);
-    background: #fff;
-}
-
-/* ─── Action bar (AI + delete, on hover) ────────────── */
-.card-actions {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    position: absolute;
-    top: 10px;
-    right: 36px;
-    opacity: 0;
-    transition: opacity 0.15s;
-    z-index: 20;
-}
-
-.node.premium-card:hover .card-actions {
-    opacity: 1;
-}
-
-.card-action-btn {
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: none;
-    cursor: pointer;
-    transition: all 0.15s;
-    font-size: 11px;
-}
-
-.card-action-btn.ai {
-    background: var(--accent-dim);
-    color: var(--accent-color);
-}
-
-.card-action-btn.ai:hover {
-    background: var(--accent-color);
-    color: #fff;
-}
-
-.card-action-btn.del {
-    background: var(--surface-hover);
-    color: var(--text-muted);
-}
-
-.card-action-btn.del:hover {
-    background: rgba(239, 68, 68, 0.2);
-    color: var(--delete-color);
-}
-
-/* ─── NodeResizer (selection handles) ──────────────── */
-/* These are rendered by ReactFlow — just tint to green */
-.react-flow__resize-control.handle {
-    background: var(--accent-color) !important;
-    border: 2px solid #fff !important;
-    border-radius: 3px !important;
+/* ─── Handles ───────────────────────────────────────── */
+.google-handle {
     width: 8px !important;
     height: 8px !important;
-}
-
-/* ─── Connection handles — completely hidden by default ─ */
-/* Only appear as tiny invisible hit-zones; visually
-   no dot/circle shows unless the user is actively dragging
-   a connection line (handled via .connecting class on body) */
-.premium-handle {
-    width: 14px !important;
-    height: 14px !important;
     background: var(--surface-color) !important;
-    border: 2.5px solid var(--accent-color) !important;
+    border: 2px solid var(--google-blue) !important;
     border-radius: 50% !important;
     opacity: 0 !important;
-    z-index: 100;
+    transition: opacity 0.2s;
 }
 
-.node.premium-card:hover .premium-handle,
-.node.premium-card.selected .premium-handle {
+.node.google-card:hover .google-handle,
+.node.google-card.selected .google-handle {
     opacity: 1 !important;
 }
 
-#left-target,
-#left-source {
-    left: -7px !important;
+/* ─── Variants ──────────────────────────────────────── */
+.node.google-card.ai {
+    border-left: 4px solid var(--google-blue);
 }
 
-#right-target,
-#right-source {
-    right: -7px !important;
+.node.google-card.main {
+    border-left: 4px solid var(--google-green);
 }
 
-/* (Removed visual change that showed handles during connection drag — per user request) */
-
-/* ─── 4-side "+" add-node buttons ───────────────────── */
-/* Base shared styles */
-.card-add-top,
-.card-add-right,
-.card-add-bottom,
-.card-add-left {
-    position: absolute;
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    background: var(--bg-color);
-    border: 1.5px solid var(--border-color);
-    color: var(--text-muted);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    z-index: 30;
-    opacity: 0;
-    transition: opacity 0.15s, transform 0.15s, background 0.15s, border-color 0.15s, color 0.15s;
-    box-shadow: var(--shadow-sm);
-    pointer-events: all;
-}
-
-/* Positions */
-.card-add-top {
-    top: -12px;
-    left: 50%;
-    transform: translateX(-50%);
-}
-
-.card-add-bottom {
-    bottom: -12px;
-    left: 50%;
-    transform: translateX(-50%);
-}
-
-.card-add-left {
-    left: -12px;
-    top: 50%;
-    transform: translateY(-50%);
-}
-
-.card-add-right {
-    right: -12px;
-    top: 50%;
-    transform: translateY(-50%);
-}
-
-/* Show on card hover */
-.node.premium-card:hover .card-add-top,
-.node.premium-card:hover .card-add-right,
-.node.premium-card:hover .card-add-bottom,
-.node.premium-card:hover .card-add-left {
-    opacity: 1;
-}
-
-/* Hover state per button */
-.card-add-top:hover,
-.card-add-right:hover,
-.card-add-bottom:hover,
-.card-add-left:hover {
-    background: var(--accent-color);
-    border-color: var(--accent-color);
-    color: #fff;
-    box-shadow: 0 2px 8px var(--accent-glow);
-}
-
-/* Scale transforms for each direction on hover */
-.card-add-top:hover {
-    transform: translateX(-50%) scale(1.15);
-}
-
-.card-add-bottom:hover {
-    transform: translateX(-50%) scale(1.15);
-}
-
-.card-add-left:hover {
-    transform: translateY(-50%) scale(1.15);
-}
-
-.card-add-right:hover {
-    transform: translateY(-50%) scale(1.15);
+.node.google-card.detail {
+    border-left: 4px solid var(--google-yellow);
 }
 
 /* ─── Animations ────────────────────────────────────── */
 @keyframes spin {
-    from {
-        transform: rotate(0deg);
-    }
-
-    to {
-        transform: rotate(360deg);
-    }
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
 }
-
 .spin {
     animation: spin 0.8s linear infinite;
 }

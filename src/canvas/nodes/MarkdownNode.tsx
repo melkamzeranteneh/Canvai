@@ -75,34 +75,32 @@ export const MarkdownNode = ({ data, id, selected }: NodeProps) => {
 
     // Simplified node: removed complex add-node UI to avoid buggy behavior
 
-    /* ── Render ───────────────────────────────────────── */
+/* ─── Render ───────────────────────────────────────── */
     const type = nd.cardType ?? 'default';
 
     return (
-        <div className={`node premium-card ${type} ${selected ? 'selected' : ''}`}>
-            {/* Background & decorative Blobs */}
-            <div className="card-play-background">
-                <div className="card-blob blob-top" />
-                <div className="card-blob blob-bottom" />
-            </div>
-
+        <div className={`node google-card ${type} ${selected ? 'selected' : ''}`}>
             {/* ── Header ─────────────────────────────── */}
-            <div className="card-play-header">
-                <div className="card-play-icon">
+            <div className="card-header">
+                <div className="card-type-icon">
                     <CardIcon type={nd.cardType} />
                 </div>
-                {nd.badge && <div className="card-play-badge">{nd.badge}</div>}
+                <div className="header-actions">
+                    {nd.badge && <div className="card-badge">{nd.badge}</div>}
+                    <button className="card-del-btn" onClick={handleDelete} title="Delete Card">
+                        <Trash2 size={16} />
+                    </button>
+                </div>
             </div>
 
             {/* ── Body ───────────────────────────────── */}
-            <div className="card-play-body">
-                {nd.category && <div className="card-play-category">{nd.category}</div>}
+            <div className="card-body">
+                {nd.category && <div className="card-category">{nd.category}</div>}
 
                 {isEditing ? (
                     <div className="nodrag" onMouseDown={e => e.stopPropagation()}>
                         <input
                             className="card-edit-title"
-                            style={{ fontSize: '24px', padding: '12px' }}
                             value={nd.title ?? ''}
                             placeholder="Title"
                             onChange={e => canvasStore.updateNode(id, { data: { ...nd, title: e.target.value } })}
@@ -111,61 +109,43 @@ export const MarkdownNode = ({ data, id, selected }: NodeProps) => {
                         />
                         <textarea
                             className="card-edit-body"
-                            style={{ minHeight: '120px' }}
                             value={content}
-                            placeholder="Add content…"
+                            placeholder="Note content…"
                             onChange={e => setContent(e.target.value)}
                             onBlur={handleBlur}
                         />
                     </div>
                 ) : (
-                    <div onDoubleClick={() => setIsEditing(true)}>
-                        <h1 className="card-play-title">{nd.title || 'New Node'}</h1>
-                        <div className="card-play-content">
+                    <div className="card-content-wrapper" onDoubleClick={() => setIsEditing(true)}>
+                        <h3 className="card-title">{nd.title || 'Note'}</h3>
+                        <div className="card-content">
                             {content ? (
                                 <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
                             ) : (
-                                <span className="card-hint">Double-click to edit your idea…</span>
+                                <span className="card-hint">Take a note…</span>
                             )}
                         </div>
                     </div>
                 )}
             </div>
 
-            {/* ── Footer Stats ───────────────────────── */}
-            <div className="card-play-stats">
-                <div className="stat-item">
-                    <div className="stat-label">Rating</div>
-                    <div className="stat-value">4.9</div>
-                </div>
-                <div className="stat-item">
-                    <div className="stat-label">Size</div>
-                    <div className="stat-value">{content.length} chars</div>
-                </div>
-                <div className="stat-item">
-                    <div className="stat-label">Connections</div>
-                    <div className="stat-value">3</div>
-                </div>
+            {/* AI Action Button */}
+            <div className="card-ai-action">
+                <button 
+                    className={`ai-fab ${isAIWorking ? 'working' : ''}`} 
+                    onClick={handleAI} 
+                    disabled={isAIWorking} 
+                    title="Ask Alice to analyze"
+                >
+                    {isAIWorking ? <Loader2 size={18} className="spin" /> : <Sparkles size={18} />}
+                </button>
             </div>
 
-            {/* Floating Action (Delete when selected) */}
-            <div className="card-play-action">
-                {selected ? (
-                    <button className="play-action-btn del" onClick={handleDelete} title="Delete Card" style={{ background: '#ef4444' }}>
-                        <Trash2 size={20} />
-                    </button>
-                ) : (
-                    <button className="play-action-btn ai" onClick={handleAI} disabled={isAIWorking} title="AI Analyze">
-                        {isAIWorking ? <Loader2 size={20} className="spin" /> : <Sparkles size={20} />}
-                    </button>
-                )}
-            </div>
-
-            {/* Connection handles (left and right only) */}
-            <Handle type="target" position={Position.Left} id="left-target" className="premium-handle" />
-            <Handle type="source" position={Position.Left} id="left-source" className="premium-handle" />
-            <Handle type="target" position={Position.Right} id="right-target" className="premium-handle" />
-            <Handle type="source" position={Position.Right} id="right-source" className="premium-handle" />
+            {/* Connection handles */}
+            <Handle type="target" position={Position.Left} id="left-target" className="google-handle" />
+            <Handle type="source" position={Position.Left} id="left-source" className="google-handle" />
+            <Handle type="target" position={Position.Right} id="right-target" className="google-handle" />
+            <Handle type="source" position={Position.Right} id="right-source" className="google-handle" />
         </div>
     );
 };
