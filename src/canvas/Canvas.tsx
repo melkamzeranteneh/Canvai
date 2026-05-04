@@ -29,7 +29,7 @@ const edgeTypes = {
 
 const connectionSelector = (state: any) => state.connection;
 
-const CanvasInner = () => {
+const CanvasInner: React.FC<{ theme: 'light' | 'dark' }> = ({ theme }) => {
     const { screenToFlowPosition } = useReactFlow();
     const connection = useStore(connectionSelector);
     const [eraserMode, setEraserMode] = useState(uiStore.getState().eraserMode);
@@ -162,23 +162,23 @@ const CanvasInner = () => {
                         type: MarkerType.ArrowClosed,
                         width: 12,
                         height: 12,
-                        color: 'rgba(0,0,0,0.20)',
+                        color: theme === 'dark' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.20)',
                     },
                     style: {
                         strokeWidth: 1.5,
-                        stroke: 'rgba(0,0,0,0.16)',
+                        stroke: theme === 'dark' ? 'rgba(255,255,255,0.16)' : 'rgba(0,0,0,0.16)',
                     },
                     animated: false,
                 }}
                 defaultViewport={{ x: 0, y: 0, zoom: 0.8 }}
                 className="canvas-react-flow"
-                colorMode="light"
+                colorMode={theme}
                 fitView
             >
                 <Background
                     gap={24}
                     size={1}
-                    color="rgba(0,0,0,0.07)"
+                    color={theme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.07)'}
                     variant={BackgroundVariant.Dots}
                 />
             </ReactFlow>
@@ -186,6 +186,6 @@ const CanvasInner = () => {
     );
 };
 
-export const Canvas = () => (
-    <CanvasInner />
+export const Canvas: React.FC<{ theme: 'light' | 'dark' }> = ({ theme }) => (
+    <CanvasInner theme={theme} />
 );

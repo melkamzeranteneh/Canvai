@@ -11,9 +11,10 @@ import './AIModal.css';
 import { Plus, Trash2, Check, X as XIcon } from 'lucide-react';
 import { canvasStore } from '../../state/canvas.store';
 import { generateId } from '../../utils/id';
-import { saveGraphToLocalStorage, getGraphPreviewString, applyImportedGraph } from '../../notes/storage/graph';
+import { saveGraphToLocalStorage, applyImportedGraph } from '../../notes/storage/graph';
 import { loadingToast, toast } from '../../utils/toast';
-import { debounce } from '../../utils/debounce';
+import { ScrollArea } from '@/ui/shadcn/components/ui/scroll-area';
+import { Badge } from '@/ui/shadcn/components/ui/badge';
 
 interface CanvasAction {
     type: 'add_node' | 'remove_node' | 'add_edge' | 'remove_edge';
@@ -36,7 +37,12 @@ interface UploadedFileContext {
     content: string;
 }
 
-export const AIModal: React.FC = () => {
+interface AIModalProps {
+    forceVisible?: boolean;
+    embedded?: boolean;
+}
+
+export const AIModal: React.FC<AIModalProps> = ({ forceVisible = false, embedded = false }) => {
     const [isVisible, setIsVisible] = useState(() => uiStore.getState().activeModal === 'ai');
     const [input, setInput] = useState('');
     const [messages, setMessages] = useState<Message[]>([
@@ -47,13 +53,9 @@ export const AIModal: React.FC = () => {
     ]);
     const [isTyping, setIsTyping] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
-    const [activeTab, setActiveTab] = useState<'chat' | 'json'>('chat');
-    const [jsonText, setJsonText] = useState(() => '{\n\n}');
-    const [isEditingJson, setIsEditingJson] = useState(false);
     const [uploadedFile, setUploadedFile] = useState<UploadedFileContext | null>(null);
     const [isRunningTest, setIsRunningTest] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
-    const mounted = useRef(true);
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -63,25 +65,14 @@ export const AIModal: React.FC = () => {
         scrollToBottom();
     }, [messages, isTyping]);
 
-    useEffect(() => {
-        // subscribe to canvas and keep jsonText updated when not editing
-        const unsub = canvasStore.subscribe(state => {
-            if (!mounted.current) return;
-            if (!isEditingJson) setJsonText(getGraphPreviewString(state));
-        });
-        return () => { mounted.current = false; unsub(); };
-    }, [isEditingJson]);
-
     // Content server endpoint used in dev: write/read Content.json
-    const CONTENT_URL = 'http://localhost:5177/content';
+    const CONTENT_URL = '/api/content';
 
     const loadContentFromServer = async () => {
         try {
             const res = await fetch(CONTENT_URL);
             if (!res.ok) return;
             const data = await res.json();
-            const pretty = JSON.stringify(data, null, 2);
-            setJsonText(pretty);
             // apply to canvas if it looks like a canvas state
             if (data && (data.nodes || data.edges)) {
                 canvasStore.setState({ nodes: data.nodes ?? [], edges: data.edges ?? [] });
@@ -231,24 +222,6 @@ export const AIModal: React.FC = () => {
         }
     };
 
-    // debounced apply for fast JSON sync
-    const debouncedApplyJson = useRef(debounce((text: string) => {
-        try {
-            const parsed = JSON.parse(text);
-            if (parsed && typeof parsed === 'object' && ('nodes' in parsed || 'edges' in parsed)) {
-                canvasStore.setState({ nodes: parsed.nodes ?? [], edges: parsed.edges ?? [] });
-                saveGraphToLocalStorage();
-                saveContentToServer(parsed);
-            } else {
-                applyImportedGraph(parsed);
-                // also persist imported format back to Content.json for consistency
-                saveContentToServer(parsed);
-            }
-        } catch (e) {
-            // ignore parse errors while typing
-        }
-    }, 500));
-
     const handleSend = async () => {
         if (!input.trim() || isTyping) return;
 
@@ -313,20 +286,17 @@ export const AIModal: React.FC = () => {
                         saveGraphToLocalStorage();
                         // persist updated canvas back to Content.json
                         saveContentToServer(jsonUpdate);
-                        setJsonText(getGraphPreviewString());
-                        toast.success({ title: 'AI updated canvas JSON (applied)'});
+                        toast.success({ title: 'AI updated canvas JSON (applied)' });
                     } else {
                         // Try import format
                         const ok = applyImportedGraph(jsonUpdate);
                         if (ok) {
-                            setJsonText(getGraphPreviewString());
                             // persist imported format as well
                             saveContentToServer(jsonUpdate);
-                            toast.success({ title: 'AI updated graph (import applied)'});
+                            toast.success({ title: 'AI updated graph (import applied)' });
                         } else {
-                            // If not importable, show the raw JSON in editor for user review
-                            setJsonText(JSON.stringify(jsonUpdate, null, 2));
-                            toast.info({ title: 'AI provided JSON (review in editor)'});
+                            // If not importable, keep canvas unchanged and notify user.
+                            toast.info({ title: 'AI provided JSON (review in editor)' });
                         }
                     }
                 } catch (e) {
@@ -426,10 +396,10 @@ export const AIModal: React.FC = () => {
         setMessages(newMessages);
     };
 
-    if (!isVisible) return null;
+    if (!isVisible && !forceVisible) return null;
 
     return (
-        <div className="ai-modal-container">
+        <div className={`ai-modal-container ${embedded ? 'embedded' : ''}`}>
             <div className="ai-modal-header">
                 <div style={{ fontWeight: 600 }}>Alice Gem</div>
                 <button className="close-btn" onClick={() => uiStore.setState({ activeModal: null })}>
@@ -437,188 +407,134 @@ export const AIModal: React.FC = () => {
                 </button>
             </div>
 
-            <div className="ai-chat-body">
-                {/* JSON visualizer shown above the chat */}
-                <div className="json-visualizer-panel">
-                    <div className="json-visualizer-header">
-                        <strong>Canvas JSON Preview</strong>
-                        <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
-                            <button className="small-btn" onClick={() => setJsonText(getGraphPreviewString())}>Refresh</button>
-                            <button className="small-btn" onClick={() => { setActiveTab('json'); setJsonText(getGraphPreviewString()); }}>Edit JSON</button>
-                        </div>
-                    </div>
-                    <pre className="json-visualizer-pre" style={{ maxHeight: 120, overflow: 'auto', background: 'var(--surface-color)', padding: 8, borderRadius: 6, border: '1px solid var(--border-color)', marginTop: 8 }}>
-                        {jsonText}
-                    </pre>
-                </div>
-                <div className="ai-tabs">
-                    <button className={`tab-btn ${activeTab === 'chat' ? 'active' : ''}`} onClick={() => { setActiveTab('chat'); setJsonText(getGraphPreviewString()); }}>Chat</button>
-                    <button className={`tab-btn ${activeTab === 'json' ? 'active' : ''}`} onClick={() => { setActiveTab('json'); setJsonText(getGraphPreviewString()); }}>JSON</button>
-                </div>
-
-                {activeTab === 'chat' ? (
-                    messages.map((msg, i) => (
-                        <div key={i} className={`chat-line ${msg.role}`}>
-                            {msg.role === 'assistant' ? (
-                                <div className="assistant-message">
-                                    <div className="assistant-name">
-                                        <Sparkles size={12} fill="var(--accent-color)" stroke="var(--accent-color)" />
-                                        <span>Alice Gem</span>
-                                    </div>
-                                    <div className="message-bubble">
-                                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                                            {msg.content}
-                                        </ReactMarkdown>
-                                    </div>
-
-                                    {/* Support single or multiple actions */}
-                                    {msg.action && (Array.isArray(msg.action) ? (
-                                        <div className="multi-action-list">
-                                            {msg.action.map((a, idx) => (
-                                                <div key={idx} className={`action-request-card ${a.status}`}>
-                                                    <div className="action-header">
-                                                        {a.type === 'add_node' ? <Plus size={16} /> : <Trash2 size={16} />}
-                                                        <span>{a.type.replace('_', ' ')}</span>
-                                                    </div>
-                                                    <div className="action-details">
-                                                        {a.type === 'add_node' && (
-                                                            <div className="node-preview">
-                                                                <strong>{a.data.title}</strong>
-                                                                <p>{a.data.content?.substring(0, 50)}...</p>
-                                                            </div>
-                                                        )}
-                                                        {a.type === 'remove_node' && (
-                                                            <div className="node-preview">
-                                                                <span>Remove node ID: {a.data.id}</span>
-                                                            </div>
-                                                        )}
-                                                        {(a.type === 'add_edge' || a.type === 'remove_edge') && (
-                                                            <div className="edge-preview">
-                                                                <span>{a.data.source} → {a.data.target}</span>
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            ))}
-
-                                            <div className="action-btns">
-                                                <button className="confirm-btn" onClick={() => handleActionConfirm(i)}>
-                                                    <Check size={14} /> Confirm All
-                                                </button>
-                                                <button className="reject-btn" onClick={() => handleActionReject(i)}>
-                                                    <XIcon size={14} /> Reject All
-                                                </button>
-                                            </div>
+            <div className="ai-chat-body" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                <ScrollArea className="flex-1 px-4">
+                    <div className="py-4">
+                        {messages.map((msg, i) => (
+                            <div key={i} className={`chat-line ${msg.role}`}>
+                                {msg.role === 'assistant' ? (
+                                    <div className="assistant-message">
+                                        <div className="assistant-name">
+                                            <Badge variant="secondary" className="gap-1 px-2 py-0.5">
+                                                <Sparkles size={10} className="text-yellow-500" />
+                                                <span>Alice Gem</span>
+                                            </Badge>
                                         </div>
-                                    ) : (
-                                        <div className={`action-request-card ${(msg.action as any).status}`}>
-                                            <div className="action-header">
-                                                {(msg.action as any).type === 'add_node' ? <Plus size={16} /> : <Trash2 size={16} />}
-                                                <span>{(msg.action as any).type.replace('_', ' ')}</span>
-                                            </div>
-                                            <div className="action-details">
-                                                {(msg.action as any).type === 'add_node' && (
-                                                    <div className="node-preview">
-                                                        <strong>{(msg.action as any).data.title}</strong>
-                                                        <p>{(msg.action as any).data.content?.substring(0, 50)}...</p>
+                                        <div className="message-bubble">
+                                            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                                {msg.content}
+                                            </ReactMarkdown>
+                                        </div>
+
+                                        {/* Support single or multiple actions */}
+                                        {msg.action && (Array.isArray(msg.action) ? (
+                                            <div className="multi-action-list">
+                                                {msg.action.map((a, idx) => (
+                                                    <div key={idx} className={`action-request-card ${a.status}`}>
+                                                        <div className="action-header">
+                                                            {a.type === 'add_node' ? <Plus size={16} /> : <Trash2 size={16} />}
+                                                            <span>{a.type.replace('_', ' ')}</span>
+                                                        </div>
+                                                        <div className="action-details">
+                                                            {a.type === 'add_node' && (
+                                                                <div className="node-preview">
+                                                                    <strong>{a.data.title}</strong>
+                                                                    <p>{a.data.content?.substring(0, 50)}...</p>
+                                                                </div>
+                                                            )}
+                                                            {a.type === 'remove_node' && (
+                                                                <div className="node-preview">
+                                                                    <span>Remove node ID: {a.data.id}</span>
+                                                                </div>
+                                                            )}
+                                                            {(a.type === 'add_edge' || a.type === 'remove_edge') && (
+                                                                <div className="edge-preview">
+                                                                    <span>{a.data.source} → {a.data.target}</span>
+                                                                </div>
+                                                            )}
+                                                        </div>
                                                     </div>
-                                                )}
-                                                {(msg.action as any).type === 'remove_node' && (
-                                                    <div className="node-preview">
-                                                        <span>Remove node ID: {(msg.action as any).data.id}</span>
-                                                    </div>
-                                                )}
-                                                {(((msg.action as any).type === 'add_edge') || ((msg.action as any).type === 'remove_edge')) && (
-                                                    <div className="edge-preview">
-                                                        <span>{(msg.action as any).data.source} → {(msg.action as any).data.target}</span>
-                                                    </div>
-                                                )}
-                                            </div>
-                                            {(msg.action as any).status === 'pending' ? (
+                                                ))}
+
                                                 <div className="action-btns">
                                                     <button className="confirm-btn" onClick={() => handleActionConfirm(i)}>
-                                                        <Check size={14} /> Confirm
+                                                        <Check size={14} /> Confirm All
                                                     </button>
                                                     <button className="reject-btn" onClick={() => handleActionReject(i)}>
-                                                        <XIcon size={14} /> Reject
+                                                        <XIcon size={14} /> Reject All
                                                     </button>
                                                 </div>
-                                            ) : (
-                                                <div className="action-status-label">
-                                                    {(msg.action as any).status === 'confirmed' ? 'Action executed' : 'Action declined'}
+                                            </div>
+                                        ) : (
+                                            <div className={`action-request-card ${(msg.action as any).status}`}>
+                                                <div className="action-header">
+                                                    {(msg.action as any).type === 'add_node' ? <Plus size={16} /> : <Trash2 size={16} />}
+                                                    <span>{(msg.action as any).type.replace('_', ' ')}</span>
                                                 </div>
-                                            )}
-                                        </div>
-                                    ))}
+                                                <div className="action-details">
+                                                    {(msg.action as any).type === 'add_node' && (
+                                                        <div className="node-preview">
+                                                            <strong>{(msg.action as any).data.title}</strong>
+                                                            <p>{(msg.action as any).data.content?.substring(0, 50)}...</p>
+                                                        </div>
+                                                    )}
+                                                    {(msg.action as any).type === 'remove_node' && (
+                                                        <div className="node-preview">
+                                                            <span>Remove node ID: {(msg.action as any).data.id}</span>
+                                                        </div>
+                                                    )}
+                                                    {(((msg.action as any).type === 'add_edge') || ((msg.action as any).type === 'remove_edge')) && (
+                                                        <div className="edge-preview">
+                                                            <span>{(msg.action as any).data.source} → {(msg.action as any).data.target}</span>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                {(msg.action as any).status === 'pending' ? (
+                                                    <div className="action-btns">
+                                                        <button className="confirm-btn" onClick={() => handleActionConfirm(i)}>
+                                                            <Check size={14} /> Confirm
+                                                        </button>
+                                                        <button className="reject-btn" onClick={() => handleActionReject(i)}>
+                                                            <XIcon size={14} /> Reject
+                                                        </button>
+                                                    </div>
+                                                ) : (
+                                                    <div className="action-status-label">
+                                                        {(msg.action as any).status === 'confirmed' ? 'Action executed' : 'Action declined'}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ))}
 
-                                    {/* message actions removed to simplify UI */}
-                                </div>
-                            ) : (
-                                <div className="user-message">
-                                    <div className="message-bubble">
-                                        {msg.content}
+                                        {/* message actions removed to simplify UI */}
+                                    </div>
+                                ) : (
+                                    <div className="user-message">
+                                        <div className="message-bubble">
+                                            {msg.content}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                        {isTyping && (
+                            <div className="chat-line assistant">
+                                <div className="assistant-message">
+                                    <div className="assistant-name">
+                                        <Badge variant="outline" className="gap-1 px-2 py-0.5 animate-pulse">
+                                            <Loader2 size={10} className="spin" />
+                                            <span>Alice Gem is thinking...</span>
+                                        </Badge>
                                     </div>
                                 </div>
-                            )}
-                        </div>
-                    ))
-                ) : (
-                    <div className="json-editor">
-                        <textarea
-                            value={jsonText}
-                            onChange={e => {
-                                const v = e.target.value;
-                                setJsonText(v);
-                                setIsEditingJson(true);
-                                if (uiStore.getState().fastJsonSync) {
-                                    debouncedApplyJson.current(v);
-                                }
-                            }}
-                            onBlur={() => setIsEditingJson(false)}
-                        />
-                        <div className="json-editor-actions">
-                            <button onClick={() => { setJsonText(getGraphPreviewString()); setIsEditingJson(false); }}>Reload</button>
-                            <button onClick={async () => {
-                                try {
-                                    const parsed = JSON.parse(jsonText);
-                                    // If it looks like full canvas state, apply directly
-                                    if (parsed && (parsed.nodes || parsed.edges)) {
-                                        canvasStore.setState({ nodes: parsed.nodes ?? [], edges: parsed.edges ?? [] });
-                                        saveGraphToLocalStorage();
-                                        await saveContentToServer(parsed);
-                                        setJsonText(getGraphPreviewString());
-                                        toast.success({ title: 'Canvas applied and saved' });
-                                    } else {
-                                        const ok = applyImportedGraph(parsed);
-                                        if (!ok) {
-                                            toast.error({ title: 'Failed to apply JSON' });
-                                        } else {
-                                            await saveContentToServer(parsed);
-                                            toast.success({ title: 'Graph applied and saved' });
-                                        }
-                                    }
-                                } catch (e) {
-                                    toast.error({ title: 'Invalid JSON' });
-                                }
-                            }}>Apply JSON</button>
-                            <button onClick={async () => { saveGraphToLocalStorage(); toast.success({ title: 'Saved snapshot to localStorage' }); }}>Save Snapshot</button>
-                        </div>
-                    </div>
-                )}
-                {isTyping && (
-                    <div className="chat-line assistant">
-                        <div className="assistant-message">
-                            <div className="assistant-name">
-                                <Loader2 size={12} className="spin" />
-                                <span>Alice Gem is thinking...</span>
                             </div>
-                        </div>
+                        )}
                     </div>
-                )}
+                </ScrollArea>
                 <div ref={messagesEndRef} />
             </div>
 
-                <div className="ai-modal-footer">
+            <div className="ai-modal-footer">
                 <div className="input-label">Ask anything</div>
                 <div className="input-wrapper">
                     <textarea
@@ -631,7 +547,7 @@ export const AIModal: React.FC = () => {
                             }
                         }}
                         placeholder="Ask Alice anything..."
-                        autoFocus
+                        autoFocus={!embedded}
                     />
                     <div className="input-actions-bar">
                         <div className="left-actions">

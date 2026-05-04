@@ -6,24 +6,32 @@
 .node.premium-card {
     background: var(--surface-color);
     border: 1px solid var(--border-color);
-    border-radius: var(--radius-md);
+    border-radius: 40px;
+    /* Play Store style */
     box-shadow: var(--shadow-md);
     display: flex;
     flex-direction: column;
     position: relative;
-    /* height grows with content */
     height: auto !important;
-    width: 320px;
-    min-width: unset;
-    min-height: 100px;
-    transition: box-shadow 0.2s ease, border-color 0.2s ease;
-    /* overflow visible so handles + add-btns can poke outside */
-    overflow: visible;
+    width: 340px;
+    min-height: 200px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    /* overflow visible for handles */
+    padding: 24px;
+}
+
+.card-play-background {
+    position: absolute;
+    inset: 0;
+    border-radius: 40px;
+    overflow: hidden;
+    z-index: -1;
+    pointer-events: none;
 }
 
 .node.premium-card:hover {
     box-shadow: var(--shadow-lg);
-    border-color: rgba(0, 0, 0, 0.12);
+    border-color: var(--border-active);
 }
 
 .node.premium-card.selected {
@@ -31,27 +39,96 @@
     box-shadow: 0 0 0 2px var(--accent-glow), var(--shadow-lg);
 }
 
-/* ─── Type top-stripe ───────────────────────────────── */
-.card-type-stripe {
-    height: 3px;
-    border-radius: var(--radius-md) var(--radius-md) 0 0;
-    flex-shrink: 0;
+/* ─── Decorative Blobs ──────────────────────────────── */
+.card-blob {
+    position: absolute;
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    filter: blur(40px);
+    opacity: 0.15;
+    z-index: 0;
+    pointer-events: none;
 }
 
-.node.premium-card.ai .card-type-stripe {
+.blob-top {
+    top: -40px;
+    right: -40px;
+}
+
+.blob-bottom {
+    bottom: -60px;
+    left: -40px;
+    width: 180px;
+    height: 180px;
+}
+
+.node.premium-card.ai .blob-top {
+    background: #a78bfa;
+}
+
+.node.premium-card.ai .blob-bottom {
     background: #7c3aed;
 }
 
-.node.premium-card.main .card-type-stripe {
+.node.premium-card.main .blob-top {
     background: var(--accent-color);
 }
 
-.node.premium-card.detail .card-type-stripe {
+.node.premium-card.main .blob-bottom {
+    background: var(--accent-hover);
+}
+
+.node.premium-card.detail .blob-top {
+    background: #f87171;
+}
+
+.node.premium-card.detail .blob-bottom {
     background: #ef4444;
 }
 
-.node.premium-card.default .card-type-stripe {
-    background: #e5e7eb;
+/* ─── Header ────────────────────────────────────────── */
+.card-play-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+    position: relative;
+    z-index: 10;
+}
+
+.card-play-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--shadow-sm);
+}
+
+.node.premium-card.ai .card-play-icon {
+    background: rgba(124, 58, 237, 0.1);
+    color: #a78bfa;
+}
+
+.node.premium-card.main .card-play-icon {
+    background: var(--accent-dim);
+    color: var(--accent-color);
+}
+
+.node.premium-card.detail .card-play-icon {
+    background: rgba(239, 68, 68, 0.1);
+    color: #f87171;
+}
+
+.card-play-badge {
+    background: var(--success-color);
+    color: #fff;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
 }
 
 /* ─── Header ────────────────────────────────────────── */
@@ -89,51 +166,52 @@
 }
 
 .node.premium-card.default .card-icon {
-    background: #f1f3f4;
-    color: #5f6368;
+    background: var(--surface-hover);
+    color: var(--text-muted);
 }
 
 .node.premium-card.ai .card-icon {
-    background: #f3e8ff;
-    color: #7c3aed;
+    background: rgba(124, 58, 237, 0.15);
+    color: #a78bfa;
 }
 
 .node.premium-card.main .card-icon {
-    background: #d1fae5;
-    color: #059669;
+    background: var(--accent-dim);
+    color: var(--accent-color);
 }
 
 .node.premium-card.detail .card-icon {
-    background: #fee2e2;
-    color: #dc2626;
+    background: rgba(239, 68, 68, 0.15);
+    color: #f87171;
 }
 
-.card-title-block {
+/* ─── Body Typography ───────────────────────────────── */
+.card-play-body {
     flex: 1;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
+    position: relative;
+    z-index: 10;
+    margin-bottom: 24px;
 }
 
-.card-title {
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--text-primary);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    line-height: 1.3;
-    letter-spacing: -0.01em;
-}
-
-.card-subtitle {
-    font-size: 10.5px;
+.card-play-category {
+    font-size: 14px;
     color: var(--text-muted);
-    font-weight: 400;
-    line-height: 1;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
+    font-weight: 500;
+    margin-bottom: 4px;
+}
+
+.card-play-title {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--text-primary);
+    line-height: 1.1;
+    margin-bottom: 12px;
+}
+
+.card-play-content {
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text-secondary);
 }
 
 .card-badge {
@@ -146,23 +224,23 @@
 }
 
 .node.premium-card.ai .card-badge {
-    background: #f3e8ff;
-    color: #7c3aed;
+    background: rgba(124, 58, 237, 0.2);
+    color: #a78bfa;
 }
 
 .node.premium-card.main .card-badge {
-    background: #d1fae5;
-    color: #059669;
+    background: var(--accent-dim);
+    color: var(--accent-color);
 }
 
 .node.premium-card.detail .card-badge {
-    background: #fee2e2;
-    color: #dc2626;
+    background: rgba(239, 68, 68, 0.2);
+    color: #f87171;
 }
 
 .node.premium-card.default .card-badge {
-    background: #f1f3f4;
-    color: #5f6368;
+    background: var(--surface-hover);
+    color: var(--text-muted);
 }
 
 .card-menu {
@@ -187,20 +265,56 @@
     color: var(--text-secondary);
 }
 
-/* ─── Divider ───────────────────────────────────────── */
-.card-rule {
-    height: 1px;
-    background: var(--border-subtle);
-    margin: 0 12px;
+/* ─── Stats Footer ──────────────────────────────────── */
+.card-play-stats {
+    display: flex;
+    justify-content: space-between;
+    padding-top: 16px;
+    border-top: 1px solid var(--border-subtle);
+    position: relative;
+    z-index: 10;
 }
 
-/* ─── Content ───────────────────────────────────────── */
-.card-body {
-    padding: 8px 12px 12px;
+.stat-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
 }
 
-.card-body.editing {
-    padding: 8px 12px 12px;
+.stat-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.stat-value {
+    font-size: 14px;
+    color: var(--text-primary);
+    font-weight: 700;
+}
+
+.card-play-action {
+    position: absolute;
+    bottom: 24px;
+    right: 24px;
+}
+
+.play-action-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: var(--accent-color);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px var(--accent-glow);
+    transition: transform 0.2s;
+}
+
+.play-action-btn:hover {
+    transform: scale(1.1);
 }
 
 /* Markdown preview */
@@ -229,7 +343,7 @@
 }
 
 .card-preview code {
-    background: #f1f3f4;
+    background: var(--surface-hover);
     border-radius: 3px;
     padding: 1px 5px;
     font-size: 11px;
@@ -344,12 +458,12 @@
 }
 
 .card-action-btn.del {
-    background: #f1f3f4;
+    background: var(--surface-hover);
     color: var(--text-muted);
 }
 
 .card-action-btn.del:hover {
-    background: #fee2e2;
+    background: rgba(239, 68, 68, 0.2);
     color: var(--delete-color);
 }
 
@@ -368,21 +482,28 @@
    no dot/circle shows unless the user is actively dragging
    a connection line (handled via .connecting class on body) */
 .premium-handle {
-    width: 10px !important;
-    height: 10px !important;
-    background: var(--surface-hover) !important;
-    border: 2px solid #fff !important;
+    width: 14px !important;
+    height: 14px !important;
+    background: var(--surface-color) !important;
+    border: 2.5px solid var(--accent-color) !important;
     border-radius: 50% !important;
-    opacity: 1 !important;
-    transition: box-shadow 0.12s, transform 0.12s !important;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.12);
-    z-index: 40;
+    opacity: 0 !important;
+    z-index: 100;
 }
 
-/* Hover emphasis when interacting */
-.premium-handle:hover {
-    transform: scale(1.1);
-    box-shadow: 0 2px 6px rgba(0,0,0,0.18);
+.node.premium-card:hover .premium-handle,
+.node.premium-card.selected .premium-handle {
+    opacity: 1 !important;
+}
+
+#left-target,
+#left-source {
+    left: -7px !important;
+}
+
+#right-target,
+#right-source {
+    right: -7px !important;
 }
 
 /* (Removed visual change that showed handles during connection drag — per user request) */
@@ -397,7 +518,7 @@
     width: 20px;
     height: 20px;
     border-radius: 50%;
-    background: #fff;
+    background: var(--bg-color);
     border: 1.5px solid var(--border-color);
     color: var(--text-muted);
     display: flex;

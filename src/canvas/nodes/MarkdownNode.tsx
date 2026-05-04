@@ -24,9 +24,9 @@ interface NodeData extends Record<string, unknown> {
 
 /* ─── Icon helper ───────────────────────────────────────── */
 const CardIcon = ({ type }: { type?: string }) => {
-    if (type === 'ai') return <Sparkles size={13} />;
-    if (type === 'main') return <FileText size={13} />;
-    return <User size={13} />;
+    if (type === 'ai') return <Sparkles size={28} />;
+    if (type === 'main') return <FileText size={28} />;
+    return <User size={28} />;
 };
 
 /* ─── Component ─────────────────────────────────────────── */
@@ -80,74 +80,88 @@ export const MarkdownNode = ({ data, id, selected }: NodeProps) => {
 
     return (
         <div className={`node premium-card ${type} ${selected ? 'selected' : ''}`}>
-
-            {/* Resizer — shows resize handles when selected */}
-            {/* Simple node: no resizer to avoid layout issues */}
-
-            {/* Top colour stripe */}
-            <div className="card-type-stripe" />
+            {/* Background & decorative Blobs */}
+            <div className="card-play-background">
+                <div className="card-blob blob-top" />
+                <div className="card-blob blob-bottom" />
+            </div>
 
             {/* ── Header ─────────────────────────────── */}
-            <div className="card-header">
-                <div className={`card-icon ${type}`}>
+            <div className="card-play-header">
+                <div className="card-play-icon">
                     <CardIcon type={nd.cardType} />
                 </div>
+                {nd.badge && <div className="card-play-badge">{nd.badge}</div>}
+            </div>
 
-                <div className="card-title-block">
-                    <div className="card-title">{nd.title || 'New Node'}</div>
-                    {nd.category && <div className="card-subtitle">{nd.category}</div>}
+            {/* ── Body ───────────────────────────────── */}
+            <div className="card-play-body">
+                {nd.category && <div className="card-play-category">{nd.category}</div>}
+
+                {isEditing ? (
+                    <div className="nodrag" onMouseDown={e => e.stopPropagation()}>
+                        <input
+                            className="card-edit-title"
+                            style={{ fontSize: '24px', padding: '12px' }}
+                            value={nd.title ?? ''}
+                            placeholder="Title"
+                            onChange={e => canvasStore.updateNode(id, { data: { ...nd, title: e.target.value } })}
+                            onKeyDown={e => e.key === 'Enter' && setIsEditing(false)}
+                            autoFocus
+                        />
+                        <textarea
+                            className="card-edit-body"
+                            style={{ minHeight: '120px' }}
+                            value={content}
+                            placeholder="Add content…"
+                            onChange={e => setContent(e.target.value)}
+                            onBlur={handleBlur}
+                        />
+                    </div>
+                ) : (
+                    <div onDoubleClick={() => setIsEditing(true)}>
+                        <h1 className="card-play-title">{nd.title || 'New Node'}</h1>
+                        <div className="card-play-content">
+                            {content ? (
+                                <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
+                            ) : (
+                                <span className="card-hint">Double-click to edit your idea…</span>
+                            )}
+                        </div>
+                    </div>
+                )}
+            </div>
+
+            {/* ── Footer Stats ───────────────────────── */}
+            <div className="card-play-stats">
+                <div className="stat-item">
+                    <div className="stat-label">Rating</div>
+                    <div className="stat-value">4.9</div>
                 </div>
-
-                <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
-                    <button className="card-action-btn ai" onClick={handleAI} disabled={isAIWorking} title="AI Summarize">
-                        {isAIWorking ? <Loader2 size={11} className="spin" /> : <Sparkles size={11} />}
-                    </button>
-                    {selected && (
-                        <button className="card-action-btn del" onClick={handleDelete} title="Delete">
-                            <Trash2 size={11} />
-                        </button>
-                    )}
+                <div className="stat-item">
+                    <div className="stat-label">Size</div>
+                    <div className="stat-value">{content.length} chars</div>
+                </div>
+                <div className="stat-item">
+                    <div className="stat-label">Connections</div>
+                    <div className="stat-value">3</div>
                 </div>
             </div>
 
-            {/* Divider */}
-            <div className="card-rule" />
+            {/* Floating Action (Delete when selected) */}
+            <div className="card-play-action">
+                {selected ? (
+                    <button className="play-action-btn del" onClick={handleDelete} title="Delete Card" style={{ background: '#ef4444' }}>
+                        <Trash2 size={20} />
+                    </button>
+                ) : (
+                    <button className="play-action-btn ai" onClick={handleAI} disabled={isAIWorking} title="AI Analyze">
+                        {isAIWorking ? <Loader2 size={20} className="spin" /> : <Sparkles size={20} />}
+                    </button>
+                )}
+            </div>
 
-            {/* ── Body ───────────────────────────────── */}
-                <div className={`card-body ${isEditing ? 'editing' : ''}`}>
-                    {isEditing ? (
-                        <div className="nodrag" onMouseDown={e => e.stopPropagation()}>
-                            <input
-                                className="card-edit-title"
-                                value={nd.title ?? ''}
-                                placeholder="Title"
-                                onChange={e => canvasStore.updateNode(id, { data: { ...nd, title: e.target.value } })}
-                                onKeyDown={e => e.key === 'Enter' && setIsEditing(false)}
-                                autoFocus
-                            />
-                            <textarea
-                                className="card-edit-body"
-                                value={content}
-                                placeholder="Add content…"
-                                onChange={e => setContent(e.target.value)}
-                                onBlur={handleBlur}
-                            />
-                        </div>
-                    ) : (
-                        <div onDoubleClick={() => setIsEditing(true)}>
-                            {content ? (
-                                <div className="card-preview">
-                                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
-                                </div>
-                            ) : (
-                                <p className="card-hint">Double-click to edit…</p>
-                            )}
-                        </div>
-                    )}
-                </div>
-
-            {/* ── Connection handles (left and right only) ── */}
-            {/* Provide both source and target handles on left/right for flexible horizontal connections */}
+            {/* Connection handles (left and right only) */}
             <Handle type="target" position={Position.Left} id="left-target" className="premium-handle" />
             <Handle type="source" position={Position.Left} id="left-source" className="premium-handle" />
             <Handle type="target" position={Position.Right} id="right-target" className="premium-handle" />
